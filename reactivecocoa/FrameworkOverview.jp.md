@@ -14,17 +14,10 @@ Eventは、ボタンを押した時、いくつかの情報をAPIから受け取
 
 `Event`は、値、または3つのいずれかのイベントを表すEnumです。
 
- * The `Next` event provides a new value from the source.
- * The `Error` event indicates that an error occurred before the signal could
-   finish. Events are parameterized by an `ErrorType`, which determines the kind
-   of error that’s permitted to appear in the event. If an error is not
-   permitted, the event can use type `NoError` to prevent any from being
-   provided.
- * The `Completed` event indicates that the signal finished successfully, and
-   that no more values will be sent by the source.
- * The `Interrupted` event indicates that the signal has terminated due to
-   cancellation, meaning that the operation was neither successful nor
-   unsuccessful.
+ * `Next`イベントは、新しい値をソースから提供します。
+ * `Error`イベントはシグナルが終わる前にエラーが発生したことを示します。イベントは`ErrorType`とパラメータ化でき、こちらが決定したエラーの形でイベントの中に出現させられます。エラーが許されない場合、`NoError`を使うことで、どのようなエラーが出現することを防ぎます。
+ * `Completed`イベントはすべてのシグナルが正しく終了したことを示します。値はソースからこれ以上送られることはありません。
+ * `Interrupted`イベントはシグナルがキャンセルされたことで切断された、ということを示します。つまり操作は、成功もしていないし、失敗もしていません。
 
 ## Signals
 
