@@ -26,38 +26,29 @@ Eventは、ボタンを押した時、いくつかの情報をAPIから受け取
 Signalは通常「実行中」の、イベントストリームとして表されます。例えば、notificationや、ユーザーインプットのように実行され、もしくは受け取るものです。
 シグナル上でイベントは送信され、それはありとあらゆるオブザーバへに届きます。すべてのオブザーバはイベントを同じタイミングで受け取ります。
 
-Users must [observe](#observers) a signal in order to access its events.
-Observing a signal does not trigger any side effects. In other words,
-signals are entirely producer-driven and push-based, and consumers (observers)
-cannot have any effect on their lifetime. While observing a signal, the user
-can only evaluate the events in the same order as they are sent on the signal. There
-is no random access to values of a signal.
+ユーザーは必ずイベントにアクセスするために、Signalを監視しなければなりません。
+Signalを監視することはなにも引き起こしません。
+つまり、Signalは完全にproduer-driven、push駆動型なので、消費者（監視側）はそのライフサイクルの中で影響を持つことができません。Signalを監視している間、ユーザは同じ順序でイベントを評価することができます。そこにランダムなアクセスはありません。
 
-Signals can be manipulated by applying [primitives][BasicOperators] to them.
-Typical primitives to manipulate a single signal like `filter`, `map` and
-`reduce` are available, as well as primitives to manipulate multiple signals
-at once (`zip`). Primitives operate only on the `Next` events of a signal.
-The `|>` operator is used to apply primitives to a signal. It can also be used
-to compose basic primitives into more complex ones.
+Signalは基本演算子を用いることで、操作することができます。
+１つのSignalを操作する典型的なものは`filter`、`map`、`reduce`などです。
+同様に複数のSignalを操作するものとして`zip`があります。
+これらのSignalは`Next`でのみ適用可能です。
+一般的に、`|>`演算子でこれをつなげ、より複雑なものを構成することができます。
 
-The lifetime of a signal consists of any number of `Next` events, followed by
-one terminating event, which may be any one of `Error`, `Completed`, or
-`Interrupted` (but not a combination).
-Terminating events are not included in the signal’s values—they must be
-handled specially.
+Signalの寿命は、イベント（組み合わせではない）を終了する１つの切断イベント、それは例えば何かしらの`Error`であり、`Completed`、`Interrupted`から来ています。
+イベントの切断にはシグナルの値は含まれていません。特別に処理する必要があります。
 
 ### Pipes
 
-A **pipe**, created by `Signal.pipe()`, is a [signal](#signals)
-that can be manually controlled.
+`pipe`は`Signal.pipe()`コマンドから作成され、シグナルをコントロールできます。
 
-The method returns a [signal](#signals) and an [observer](#observers).
-The signal can be controlled by sending events to the observer. This
-can be extremely useful for bridging non-RAC code into the world of signals.
+pipeは`Signal`と`Observer`を返却します。
+シグナルはイベントをオブザーバに送信することでコントロールできます。
+これは、ReactiveCocoa的でないコードにSignalの有益性を広める極めて有益な機会です。
 
-For example, instead of handling application logic in block callbacks, the
-blocks can simply send events to the observer. Meanwhile, the signal
-can be returned, hiding the implementation detail of the callbacks.
+例えばblockのcallbackによるアプリの操作のかわりに、ブロックはただシンプルにイベントをオブザーバに送るだけです。その間にシグナルを受け取ることができるので、細かなコールバックの実装を隠蔽することができます。
+
 
 ## Signal Producers
 
