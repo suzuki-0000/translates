@@ -50,22 +50,16 @@ pipeは`Signal`と`Observer`を返却します。
 例えばblockのcallbackによるアプリの操作のかわりに、ブロックはただシンプルにイベントをオブザーバに送るだけです。その間にシグナルを受け取ることができるので、細かなコールバックの実装を隠蔽することができます。
 
 
+
 ## Signal Producers
 
-A **signal producer**, represented by the [`SignalProducer`][SignalProducer] type, creates
-[signals](#signals) and performs side effects.
+`SignalProducer`は`Signal`を作成し、実際に作用を与えます。
 
-They can be used to represent operations or tasks, like network
-requests, where each invocation of `start()` will create a new underlying
-operation, and allow the caller to observe the result(s). The
-`startWithSignal()` variant gives access to the produced signal, allowing it to
-be observed multiple times if desired.
+SignalProducerは、通信リクエストのように、操作を表現するために使用することができ、 `start()`により実施の操作を作成し、呼び出し元が結果（複数可）を監視することができます。
+`startWithSignal（）`は作成されたSignalへのアクセスを提供します。必要に応じて複数回呼ばれます。
 
-Because of the behavior of `start()`, each signal created from the same
-producer may see a different ordering or version of events, or the stream might
-even be completely different! Unlike a plain signal, no work is started (and
-thus no events are generated) until an observer is attached, and the work is
-restarted anew for each additional observer.
+`start()`のおかげで、, 同じSignalから作成された個々のProducerは、順序の違いや、イベントのバージョンや、もしくはストリームすら完全に違うことすらあるでしょう！
+そのへんの単純なシグナルと異なり、オブザーバーがアタッチされるまではなにも開始しません（イベントも生成されません）。そして操作はそれぞれの追加されたオブザーバーのために再スタートされます。
 
 Starting a signal producer returns a [disposable](#disposables) that can be used to
 interrupt/cancel the work associated with the produced signal.
