@@ -50,7 +50,6 @@ pipeは`Signal`と`Observer`を返却します。
 例えばblockのcallbackによるアプリの操作のかわりに、ブロックはただシンプルにイベントをオブザーバに送るだけです。その間にシグナルを受け取ることができるので、細かなコールバックの実装を隠蔽することができます。
 
 
-
 ## Signal Producers
 
 `SignalProducer`は`Signal`を作成し、実際に作用を与えます。
@@ -58,9 +57,9 @@ pipeは`Signal`と`Observer`を返却します。
 SignalProducerは、通信リクエストのように、操作を表現するために使用することができ、 `start()`により実施の操作を作成し、呼び出し元が結果（複数可）を監視することができます。
 `startWithSignal（）`は作成されたSignalへのアクセスを提供します。必要に応じて複数回呼ばれます。
 
-`start()`のおかげで、, 同じSignalから作成された個々のProducerは、順序の違いや、イベントのバージョンや、もしくはストリームすら完全に違うことすらあるでしょう！
+`start()`のおかげで、,同じSignalから作成された個々のProducerは、順序の違いや、イベントのバージョンや、もしくはストリームすら完全に違うことすらあるでしょう！
 そのへんの単純なシグナルと異なり、オブザーバーがアタッチされるまではなにも開始しません（イベントも生成されません）。そして操作はそれぞれの追加されたオブザーバーのために再スタートされます。
-
+SignalProducerがスタートすると、`disposable`を返却します。これは、`interrupt`,`cancel`で、SignalProducerが作成したシグナルと作用を中断、キャンセルするために使用できます。
 Starting a signal producer returns a [disposable](#disposables) that can be used to
 interrupt/cancel the work associated with the produced signal.
 
