@@ -59,37 +59,25 @@ SignalProducerは、通信リクエストのように、操作を表現するた
 
 `start()`のおかげで、,同じSignalから作成された個々のProducerは、順序の違いや、イベントのバージョンや、もしくはストリームすら完全に違うことすらあるでしょう！
 そのへんの単純なシグナルと異なり、オブザーバーがアタッチされるまではなにも開始しません（イベントも生成されません）。そして操作はそれぞれの追加されたオブザーバーのために再スタートされます。
-SignalProducerがスタートすると、`disposable`を返却します。これは、`interrupt`,`cancel`で、SignalProducerが作成したシグナルと作用を中断、キャンセルするために使用できます。
-Starting a signal producer returns a [disposable](#disposables) that can be used to
-interrupt/cancel the work associated with the produced signal.
 
-Just like signals, signal producers can also be manipulated via primitives
-like `map`, `filter`, etc.
-Every signal primitive can be “lifted” to operate upon signal producers instead,
-using the `lift` method, or implicitly through the `|>` operator.
-Furthermore, there are additional primitives that control _when_ and _how_ work
-is started—for example, `times`.
+SignalProducerがスタートすると、`disposable`を返却します。これは、`interrupt`,`cancel`で、SignalProducerが作成したシグナルとその効果を中断、キャンセルするために使用できます。
+
+Signalと同様に、SignalProducerは`map`,`filter`などで値を操作できます。
+すべての操作はSignalProducerの`lift`を使うことで、または`|>`演算子を使うことで、 操作できます。さらに、追加の操作演算子もあります。たとえば`times`などです。 
 
 ### Buffers
 
-A **buffer**, created by `SignalProducer.buffer()`, is a (optionally bounded)
-queue for [events](#events) that replays those events when new
-[signals](#signals) are created from the producer.
-
-Similar to a [pipe](#pipes), the method returns an [observer](#observers).
-Events sent to this observer will be added to the queue. If the buffer is already
-at capacity when a new value arrives, the earliest (oldest) value will be
-dropped to make room for it.
+`buffer`は`SignalProducer.buffer()`で作成され、Producerによって新たに作成されたシグナルをリプレイするためのキューです。
+pipeに似ていて、Observerを返却します。EventがこのObserverに送信した値はキューされます。
+もしbufferがすでに容量一杯であれば、もっとも古いデータから削除されます。
 
 ## Observers
 
-An **observer** is anything that is waiting or capable of waiting for [events](#events)
-from a [signal](#signals). Within RAC, an observer is represented as
-a [`SinkType`](http://swiftdoc.org/protocol/SinkType/) that accepts
-[`Event`][Event] values.
+`Observer`はシグナルからイベントを待っている、もしくは待っている可能性のあるものです。
+RACではObserverは[`SinkType`](http://swiftdoc.org/protocol/SinkType)として表現され、イベントを処理します。
 
-Observers can be implicitly created by using the callback-based versions of the
-`Signal.observe` or `SignalProducer.start` methods.
+Observerはコールバックベースの`Signal.observe`か`SignalProducer.start`関数によって、暗黙的に作成できます。
+
 
 ## Actions
 
