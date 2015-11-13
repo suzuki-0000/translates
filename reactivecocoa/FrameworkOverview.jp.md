@@ -78,20 +78,16 @@ RACではObserverは[`SinkType`](http://swiftdoc.org/protocol/SinkType)として
 
 Observerはコールバックベースの`Signal.observe`か`SignalProducer.start`関数によって、暗黙的に作成できます。
 
-
 ## Actions
 
-An **action**, represented by the [`Action`][Action] type, will do some work when
-executed with an input. While executing, zero or more output values and/or an
-error may be generated.
+`Action`は、インプットから、なにかしらの処理を実行します。
+実行中は、0以上のアウトプット、必要であればエラーを生成します。
 
-Actions are useful for performing side-effecting work upon user interaction, like when a button is
-clicked. Actions can also be automatically disabled based on a [property](#properties), and this
-disabled state can be represented in a UI by disabling any controls associated
-with the action.
+Actionは例えばボタンをクリックした時な、ユーザインタラクションに対して処理を実行するときに有益です。
+Actionは`property`によって自動的に無効化されます。
+この無効の状態は、関連するアクションを無効にすることによって、 UI上で表現することができます。
 
-For interaction with `NSControl` or `UIControl`, RAC provides the
-[`CocoaAction`][CocoaAction] type for bridging actions to Objective-C.
+`NSControl`、`UIControl`とのインタラクションについては、RACが`CocoaAction`としてObjective-Cへのブリッジを可能にします。
 
 ## Properties
 
