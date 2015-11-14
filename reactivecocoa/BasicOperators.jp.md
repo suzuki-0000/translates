@@ -1,39 +1,35 @@
-# Basic Operators
+# 基本演算子
 
-This document explains some of the most common operators used in ReactiveCocoa,
-and includes examples demonstrating their use.
+ここでは、ReactiveCocoaにおいて最も一般的なオペレータのうちのいくつを使い、それらの使用を示している例を説明します。
 
-Note that “operators,” in this context, refers to functions that transform
-[signals][] and [signal producers][], _not_ custom Swift operators. In other
-words, these are composable primitives provided by ReactiveCocoa for working
-with event streams.
+ここで説明するオペレータはSignalおよびSignalProducerを変換する機能です。Swiftのカスタムオペレータではありません。
+すなわち、これらはReactiveCocoaがイベントストリームを提供するために内包されたオペレータです。
 
-This document will use the term “event stream” when dealing with concepts that
-apply to both `Signal` and `SignalProducer`. When the distinction matters, the
-types will be referred to by name.
+ここではSignal,SignalProduerともに、同じ「イベントストリーム」として扱います。
+もし区別が必要な場合はタイプは名前によって区別されます。
 
-**[Performing side effects with event streams](#performing-side-effects-with-event-streams)**
+**[イベントストリームの効用について](#イベントストリームの効用について)**
 
   1. [Observation](#observation)
   1. [Injecting effects](#injecting-effects)
 
-**[Operator composition](#operator-composition)**
+**[オペレータの構造](#operator-composition)**
 
   1. [Lifting](#lifting)
   1. [Pipe](#pipe)
 
-**[Transforming event streams](#transforming-event-streams)**
+**[イベントストリームの変換](#transforming-event-streams)**
 
   1. [Mapping](#mapping)
   1. [Filtering](#filtering)
   1. [Aggregating](#aggregating)
 
-**[Combining event streams](#combining-event-streams)**
+**[イベントストリームの結合](#combining-event-streams)**
 
   1. [Combining latest values](#combining-latest-values)
   1. [Zipping](#zipping)
 
-**[Flattening producers](#flattening-producers)**
+**[Producerの平坦化](#flattening-producers)**
 
   1. [Concatenating](#concatenating)
   1. [Merging](#merging)
@@ -44,6 +40,7 @@ types will be referred to by name.
   1. [Catching errors](#catch)
   1. [Mapping errors](#mapping-error)
   1. [Retrying](#retrying)
+
 
 ## Performing side effects with event streams
 
