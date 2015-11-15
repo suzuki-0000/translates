@@ -89,31 +89,24 @@ Actionは`property`によって自動的に無効化されます。
 
 `NSControl`、`UIControl`とのインタラクションについては、RACが`CocoaAction`としてObjective-Cへのブリッジを可能にします。
 
+
 ## Properties
 
-A **property**, represented by the [`PropertyType`][Property] protocol,
-stores a value and notifies observers about future changes to that value.
+`property`は`PropertyType`プロトコルで表現される、値を格納し、変更を感知してオブザーバに通知するための値です。
 
-The current value of a property can be obtained from the `value` getter. The
-`producer` getter returns a [signal producer](#signal-producers) that will send
-the property’s current value, followed by all changes over time.
+現在の値は`value`から取得することが可能です。
+`producer`からは、SignalProducerを取得でき、それはPropertyの時系列上の変更にしたがって、変更された現在の値を返します。
 
-The `<~` operator can be used to bind properties in different ways. Note that in
-all cases, the target has to be a [`MutablePropertyType`][Property].
+`<~`演算子で様々なpropertyを紐付けることができます。 
+これらのケースでは、propertyは`MutablePropertyType`でなければいけません。
 
-* `property <~ signal` binds a [signal](#signals) to the property, updating the
-  property’s value to the latest value sent by the signal.
-* `property <~ producer` starts the given [signal producer](#signal-producers),
-  and binds the property’s value to the latest value sent on the started signal.
-* `property <~ otherProperty` binds one property to another, so that the destination
-  property’s value is updated whenever the source property is updated.
+* `property <~ signal`でSignalをひも付け、Signalによって送られた最新の値でpropertyの値を更新します。
+* `property <~ producer`はSignalProducerを与え、Signalによって送られた最新の値でpropertyの値を更新します。
+* `property <~ otherProperty`でproperty同士をひも付け、propertyが変化したタイミングでどのような状態でも同じように更新します。
 
-The [`DynamicProperty`][Property] type can be used to bridge to Objective-C APIs
-that require Key-Value Coding (KVC) or Key-Value Observing (KVO), like
-`NSOperation`. Note that most AppKit and UIKit properties do _not_ support KVO,
-so their changes should be observed through other mechanisms.
-[`MutableProperty`][Property] should be preferred over dynamic properties
-whenever possible!
+`DynamicProperty`はObjective-CのAPIでKVC, KVOの処理が必要な場合の橋渡しするために使われます。例えば`NSOperation`などです。
+気をつけてほしいのはほとんどのAppKitとUIKitはKVOをサポートしていないので、これらの変更感知は他のメカニズムで行われるべきなのです。
+なにか動的な変更を必要とする場合、可能な限り`MutableProperty`を使うことをおすすめします！
 
 ## Disposables
 
