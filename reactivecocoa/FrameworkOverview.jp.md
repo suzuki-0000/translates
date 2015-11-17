@@ -9,7 +9,7 @@ RACを使うための理解の手助けとして、そしてサンプルとし�
 
 `Event`は、「なにかが起きた」ということを形式的に表現しています。
 RACでは、Eventはコミュニケーションのための中心的役割です。
-Eventは、ボタンを押した時、いくつかの情報をAPIから受け取った時、エラーが発生した時、長時間操作の完了を受け取った時、など、さまざまなことを表現します。
+Eventは、ボタンを押した時、いくつかの情報をAPIから受け取った時、エラーが発生した時、長時間操作の完了を受け取った時など、さまざまなことを表現します。
 いずれのケースにせよ、なにかがEventを生成し、Signalと通していくつかのObserverへと送信します。
 
 `Event`は、値、または3つのいずれかのイベントを表すEnumです。
@@ -21,14 +21,14 @@ Eventは、ボタンを押した時、いくつかの情報をAPIから受け取
 
 ## Signals
 
-`Signal`は時系列上での監視できる一連のイベントです。
+`Signal`は時系列上での監視できる一連の`Events`です。
 
 Signalは通常「実行中」の、イベントストリームとして表されます。例えば、notificationや、ユーザーインプットのように実行され、もしくは受け取るものです。
 シグナル上でイベントは送信され、それはありとあらゆるオブザーバへに届きます。すべてのオブザーバはイベントを同じタイミングで受け取ります。
 
-ユーザーは必ずイベントにアクセスするために、Signalを監視しなければなりません。
+ユーザーは必ずEventにアクセスするために、Signalを監視しなければなりません。
 Signalを監視することはなにも引き起こしません。
-つまり、Signalは完全にproduer-driven、push駆動型なので、消費者（監視側）はそのライフサイクルの中で影響を持つことができません。Signalを監視している間、ユーザは同じ順序でイベントを評価することができます。そこにランダムなアクセスはありません。
+これはどういうことかというと、Signalは完全にproduer駆動／push駆動型なので、消費者（監視側）はそのライフサイクルの中で影響を持つことができません。Signalを監視している間、ユーザは同じ順序でEventを評価することができます。そこにランダムなアクセスはありません。
 
 Signalは基本演算子を用いることで、操作することができます。
 １つのSignalを操作する典型的なものは`filter`、`map`、`reduce`などです。
@@ -47,7 +47,7 @@ pipeは`Signal`と`Observer`を返却します。
 シグナルはイベントをオブザーバに送信することでコントロールできます。
 これは、ReactiveCocoa的でないコードにSignalの有益性を広める極めて有益な機会です。
 
-例えばblockのcallbackによるアプリの操作のかわりに、ブロックはただシンプルにイベントをオブザーバに送るだけです。その間にシグナルを受け取ることができるので、細かなコールバックの実装を隠蔽することができます。
+例えばブロックコールバック処理によるアプリの操作のかわりに、ブロックはただシンプルにEventをObserverに送るだけです。その間にSignalを受け取ることができるので、細かなコールバックの実装を隠蔽することができます。
 
 
 ## Signal Producers
@@ -74,7 +74,7 @@ pipeに似ていて、Observerを返却します。EventがこのObserverに送�
 ## Observers
 
 `Observer`はシグナルからイベントを待っている、もしくは待っている可能性のあるものです。
-RACではObserverは[`SinkType`](http://swiftdoc.org/protocol/SinkType)として表現され、イベントを処理します。
+RACではObserverはObserverとして表現され、イベントを処理します。
 
 Observerはコールバックベースの`Signal.observe`か`SignalProducer.start`関数によって、暗黙的に作成できます。
 
@@ -108,52 +108,28 @@ Actionは`property`によって自動的に無効化されます。
 気をつけてほしいのはほとんどのAppKitとUIKitはKVOをサポートしていないので、これらの変更感知は他のメカニズムで行われるべきなのです。
 なにか動的な変更を必要とする場合、可能な限り`MutableProperty`を使うことをおすすめします！
 
+
 ## Disposables
 
-A **disposable**, represented by the [`Disposable`][Disposable] protocol, is a mechanism
-for memory management and cancellation.
+`disposable`は`Disposable`プロトコルで表現される、メモリー管理とキャンセル機能を司るメカニズムです。
 
-When starting a [signal producer](#signal-producers), a disposable will be returned.
-This disposable can be used by the caller to cancel the work that has been started
-(e.g. background processing, network requests, etc.), clean up all temporary
-resources, then send a final `Interrupted` event upon the particular
-[signal](#signals) that was created.
+SignalProducerをスタートした時、disposableは返却されます。
+このdisposableは呼び出し元がすでにスタートしている処理をキャンセルしたり（例えばバックグラウンド作業、通信リクエストなど）、すべての一時ファイルを削除し、Signalに`Interrupted`イベントをシグナルに送信します。
 
-Observing a [signal](#signals) may also return a disposable. Disposing it will
-prevent the observer from receiving any future events from that signal, but it
-will not have any effect on the signal itself.
+Signalをオブザーブするときもまた、disposableは返却されます。
+Signalからの、なにかしらのイベントを受け取ったオブザーバはそれを破棄することができます。しかしそれはSignal自体にはなんの影響も及ぼしません。
 
-For more information about cancellation, see the RAC [Design Guidelines][].
+さらに詳しく知りたければ、こちらを参照してください。
 
 ## Schedulers
 
-A **scheduler**, represented by the [`SchedulerType`][Scheduler] protocol, is a
-serial execution queue to perform work or deliver results upon.
+`scheduler`は`SchedulerType`プロトコルで表現される、処理を実現するための実行キューです。
 
-[Signals](#signals) and [signal producers](#signal-producers) can be ordered to
-deliver events on a specific scheduler. [Signal producers](#signal-producers)
-can additionally be ordered to start their work on a specific scheduler.
+Signal、SignalProducerはSchedulerに対し、イベントを送信するように命令することができます。SignalProducerは加えて、特定Schedulerに対して処理を実行するよう命令することができます。
+Schedulerはいわば`Central Dispatch queue`のようなものですが、Schedulerはdisposableを用いて、キャンセルすることができ、そしてそれは常に連続的に実行されます。
+ImmediateSchedulerを除いて、スケジューラは同期実行を提供していません。これは、デッドロックを避けることができ、Signal、SignalProducerを使う理由になります。
 
-Schedulers are similar to Grand Central Dispatch queues, but schedulers support
-cancellation (via [disposables](#disposables)), and always execute serially.
-With the exception of the [`ImmediateScheduler`][Scheduler], schedulers do not
-offer synchronous execution. This helps avoid deadlocks, and encourages the use
-of [signal and signal producer primitives][BasicOperators] instead of blocking work.
+Schedulerはまた` NSOperationQueue`にやや似ています。
+しかし、Schedulerは再度並び替えることを許さず、また他に依存することもできません。
 
-Schedulers are also somewhat similar to `NSOperationQueue`, but schedulers
-do not allow tasks to be reordered or depend on one another.
-
-
-[Design Guidelines]: DesignGuidelines.md
-[BasicOperators]: BasicOperators.md
-[README]: ../README.md
-[Signal]: ../ReactiveCocoa/Swift/Signal.swift
-[SignalProducer]: ../ReactiveCocoa/Swift/SignalProducer.swift
-[Action]: ../ReactiveCocoa/Swift/Action.swift
-[CocoaAction]: ../ReactiveCocoa/Swift/Action.swift
-[Disposable]: ../ReactiveCocoa/Swift/Disposable.swift
-[Scheduler]: ../ReactiveCocoa/Swift/Scheduler.swift
-[Property]: ../ReactiveCocoa/Swift/Property.swift
-[Event]: ../ReactiveCocoa/Swift/Event.swift
-[SinkOf]: http://swiftdoc.org/type/SinkOf/
 
