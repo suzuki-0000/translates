@@ -41,12 +41,12 @@
   1. [Mapping errors](#mapping-error)
   1. [Retrying](#retrying)
 
+## イベントストリームの効用について
 
-## Performing side effects with event streams
+### 監視
 
-### Observation
-
-`Signal`s can be observed with the `observe` function. It takes an `Observer` as argument to which any future events are sent. 
+`Signal`は`Observe` functionを用いて監視することができます。
+Signalはどのようなイベントが送信された場合でも`Observer`を引数として受け取ることができます。
 
 ```Swift
 signal.observe(Signal.Observer { event in
@@ -63,7 +63,7 @@ signal.observe(Signal.Observer { event in
 })
 ```
 
-Alternatively, callbacks for the `Next`, `Error`, `Completed` and `Interrupted` events can be provided which will be called when a corresponding event occurs.
+あるいは、 ` Next`、` ERROR`、Completed`、` Interrupted`イベントが、イベントが応答したときに受け取ることもできます。
 
 ```Swift
 signal.observe(next: { next in
@@ -77,9 +77,10 @@ signal.observe(next: { next in
 })
 ```
 
-Note that it is not necessary to provide all four parameters - all of them are optional, you only need to provide callbacks for the events you care about.
+すべてはオプショナルであるため、４つのパラメータをすべてを提供する必要はないです。
+好きなモノを使えば良いのです。
 
-`observe` is also available as operator that can be used with [|>](#pipe)
+`observe`はオペレータとしても使用可能で[|>](#pipe)としても表されます。
 
 ### Injecting effects
 
