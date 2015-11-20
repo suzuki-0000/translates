@@ -43,7 +43,7 @@
 
 ## イベントストリームの効用について
 
-### 監視
+### 監視(Observetion)
 
 `Signal`は`Observe` functionを用いて監視することができます。
 Signalはどのようなイベントが送信された場合でも`Observer`を引数として受け取ることができます。
@@ -80,11 +80,9 @@ signal.observe(next: { next in
 すべてはオプショナルであるため、４つのパラメータをすべてを提供する必要はないです。
 好きなモノを使えば良いのです。
 
-`observe`はオペレータとしても使用可能で[|>](#pipe)としても表されます。
-
 ### Injecting effects
 
-副作用は、`SignalProducer`として注入できます。オペレータは`on`を使います。
+作用は、`SignalProducer`として注入できます。オペレータは`on`を使うことでイベントストリームの生成を行います。
 
 ```Swift
 let producer = signalProducer
@@ -112,29 +110,14 @@ Producerをスタートさせないと、なにもプリントされないので
 
 ## Operator composition
 
-### Pipe
-
-`|>` オペレータはイベントストリームを適用する際に利用します。複数のオペレータは連鎖できます。
-こんな感じ：
-
-```Swift
-intSignal
-    |> filter { num in num % 2 == 0 }
-    |> map(toString)
-    |> observe(next: { string in println(string) })
-```
-
 ### Lifting
 
-`Signal`は`SignalProducer`に作用するように`lift`を用い働きかけます。
-
-これを与えられたそれぞれのSignalの演算子を元にSignalProducerをあらたに作成します。 あたかもそれぞれのSignalに個別に働きかけたかのように。
-
-`|>`演算子は、暗黙のうちにSignal演算子をlistするので、SignalProducerに直接働きかけることができます。
+`Signal`演算子は`lift`メソッドを使うことで`SignalProducer`上に働きかけることができます。
+`lift`を与えられたそれぞれのSignalは新たにSignalProducerを生成します。 
 
 ## Transforming event streams
 
-これらのオペレータは、新しいストリームにイベントストリームを変換します。These 
+これらのオペレータは、新しいストリームにイベントストリームを変換します。 
 
 ### Mapping
 
