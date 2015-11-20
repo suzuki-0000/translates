@@ -4,9 +4,26 @@
 このドキュメントは[Rx Design
 Guidelines](http://blogs.msdn.com/b/rxteam/archive/2010/10/28/rx-design-guidelines.aspx)に強く影響を受けています。
 
+This document contains guidelines for projects that want to make use of
+ReactiveCocoa. The content here is heavily inspired by the [Rx Design
+Guidelines](http://blogs.msdn.com/b/rxteam/archive/2010/10/28/rx-design-guidelines.aspx).
+
+このドキュメントでは、RACの基本的な知識があることを前提とします。
+`Framework Overview.md`はRACが提供するコンセプトを理解するのを助けます。
+
 This document assumes basic familiarity
 with the features of ReactiveCocoa. The [Framework Overview][] is a better
 resource for getting up to speed on the main types and concepts provided by RAC.
+
+**[The `Event` contract](#the-event-contract)**
+
+ 1. [`Next`が値を提供したり、イベントの発生を示す]
+ 1. [Failuresは例外のように動作し、即座に送信する]
+ 1. [Completionは成功を示す]
+ 1. [Interruptは、処理をキャンセルし、通常はすぐ送信する]
+ 1. [EventはSerialである]
+ 1. [Eventは再帰的に送信することはできない] 
+ 1. [Eventはデフォルトでは同期的に送信される]
 
 **[The `Event` contract](#the-event-contract)**
 
@@ -18,7 +35,15 @@ resource for getting up to speed on the main types and concepts provided by RAC.
  1. [Events cannot be sent recursively](#events-cannot-be-sent-recursively)
  1. [Events are sent synchronously by default](#events-are-sent-synchronously-by-default)
 
+
 **[The `Signal` contract](#the-signal-contract)**
+
+ 1. [Signalは、startされて初めてインスタンスを生成]
+ 1. [SignalはObervingすることでの副作用はない]
+ 1. [SignalのすべてのObserverは同じイベントを同じ順序で見る]
+ 1. [Signalは
+ 
+
 
  1. [Signals start work when instantiated](#signals-start-work-when-instantiated)
  1. [Observing a signal does not have side effects](#observing-a-signal-does-not-have-side-effects)
