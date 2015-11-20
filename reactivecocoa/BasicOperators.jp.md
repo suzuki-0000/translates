@@ -287,7 +287,7 @@ let latest =
 ### Merging
 
 `merge`はinner`SignalProducer`の値をすぐにouter`SignalProducer`へと送信します。
-いずれかのproducerで何かしらのエラーが送信された場合、すぐに１つのSignalProducerへと変換され、切断されます。
+いずれかのproducerで何かしらのエラーが送信された場合、すぐにflattenされたSignalProducerへと変換され、切断されます。
 
 ```Swift
 let (producerA, lettersObserver) = SignalProducer<String, NoError>.buffer(5)
@@ -313,31 +313,30 @@ numbersObserver.sendNext("3")    // prints "3"
 
 ### Concatenating
 
-`Concat`は内部Producerの直列化をサポートします。外部Producerはすぐにスタートします。
-続いておこるproducerはそれぞれのproducerがcompleteするまでスタートしません。
-エラーはすぐにproducerへと送られます
+`Concat`はinner`SignalProducer`の直列化をサポートします。outer`SignalProducer`はすぐにスタートします。
+それぞれのproducerは、現在処理されているproducerがcompleteするまでスタートしません。
+エラーはすぐにflattenされたproducerへと送信されます。
 
-The `.Concat` strategy is used to serialize work of the inner `SignalProducer`s. The outer producer is started immediately. Each subsequent producer is not started until the preceeding one has completed. Errors are immediately forwarded to the flattened producer.
 
 ```Swift
-let (producerA, lettersSink) = SignalProducer<String, NoError>.buffer(5)
-let (producerB, numbersSink) = SignalProducer<String, NoError>.buffer(5)
-let (signal, sink) = SignalProducer<SignalProducer<String, NoError>, NoError>.buffer(5)
+let (producerA, lettersObserver) = SignalProducer<String, NoError>.buffer(5)
+let (producerB, numbersObserver) = SignalProducer<String, NoError>.buffer(5)
+let (signal, observer) = SignalProducer<SignalProducer<String, NoError>, NoError>.buffer(5)
 
-signal |> flatten(FlattenStrategy.Concat) |> start(next: println)
+signal.flatten(.Concat).startWithNext { next in print(next) }
 
-sendNext(sink, producerA)
-sendNext(sink, producerB)
-sendCompleted(sink)
+observer.sendNext(producerA)
+observer.sendNext(producerB)
+observer.sendCompleted()
 
-sendNext(numbersSink, "1")    // nothing printed
-sendNext(lettersSink, "a")    // prints "a"
-sendNext(lettersSink, "b")    // prints "b"
-sendNext(numbersSink, "2")    // nothing printed
-sendNext(lettersSink, "c")    // prints "c"
-sendCompleted(lettersSink)    // prints "1", "2"
-sendNext(numbersSink, "3")    // prints "3"
-sendCompleted(numbersSink)
+numbersObserver.sendNext("1")    // nothing printed
+lettersObserver.sendNext("a")    // prints "a"
+lettersObserver.sendNext("b")    // prints "b"
+numbersObserver.sendNext("2")    // nothing printed
+lettersObserver.sendNext("c")    // prints "c"
+lettersObserver.sendCompleted()    // prints "1", "2"
+numbersObserver.sendNext("3")    // prints "3"
+numbersObserver.sendCompleted()
 ```
 
 [`Concat`のよくわかる図式](http://neilpa.me/rac-marbles/#concat)
@@ -346,94 +345,97 @@ sendCompleted(numbersSink)
 
 `Latest`は最新のinputのみを送信するためのものです。
 
-The `.Latest` strategy forwards only values from the latest input `SignalProducer`.
 
 ```Swift
-let (producerA, sinkA) = SignalProducer<String, NoError>.buffer(5)
-let (producerB, sinkB) = SignalProducer<String, NoError>.buffer(5)
-let (producerC, sinkC) = SignalProducer<String, NoError>.buffer(5)
-let (signal, sink) = SignalProducer<SignalProducer<String, NoError>, NoError>.buffer(5)
+let (producerA, observerA) = SignalProducer<String, NoError>.buffer(5)
+let (producerB, observerB) = SignalProducer<String, NoError>.buffer(5)
+let (producerC, observerC) = SignalProducer<String, NoError>.buffer(5)
+let (signal, observer) = SignalProducer<SignalProducer<String, NoError>, NoError>.buffer(5)
 
-signal |> flatten(FlattenStrategy.Latest) |> start(next: println)
+signal.flatten(.Latest).startWithNext { next in print(next) }
 
-sendNext(sink, producerA)   // nothing printed
-sendNext(sinkC, "X")        // nothing printed
-sendNext(sinkA, "a")        // prints "a"
-sendNext(sinkB, "1")        // nothing printed
-sendNext(sink, producerB)   // prints "1"
-sendNext(sinkA, "b")        // nothing printed
-sendNext(sinkB, "2")        // prints "2"
-sendNext(sinkC, "Y")        // nothing printed
-sendNext(sinkA, "c")        // nothing printed
-sendNext(sink, producerC)   // prints "X", "Y"
-sendNext(sinkB, "3")        // nothing printed
-sendNext(sinkC, "Z")        // prints "Z"
+observer.sendNext(producerA)   // nothing printed
+observerC.sendNext("X")        // nothing printed
+observerA.sendNext("a")        // prints "a"
+observerB.sendNext("1")        // nothing printed
+observer.sendNext(producerB)   // prints "1"
+observerA.sendNext("b")        // nothing printed
+observerB.sendNext("2")        // prints "2"
+observerC.sendNext("Y")        // nothing printed
+observerA.sendNext("c")        // nothing printed
+observer.sendNext(producerC)   // prints "X", "Y"
+observerB.sendNext("3")        // nothing printed
+observerC.sendNext("Z")        // prints "Z"
 ```
 
 ## Handling errors
 
 これから説明する演算子はエラーがイベントストリーム内で発生したさいに使用するものです。
 
-These operators are used to handle errors that might occur on an event stream.
-
 ### Catching errors
 
-`catch`はなにかのエラーをSignalProducerで受け取るためのものです。
+`flatMapError`は発生したエラーを`SignalProducer`で受け取るためのものです。
 catchの後に、新しいSignalProducerがスタートします。
 
 
-The `catch` operator catches any error that may occur on the input `SignalProducer`, then starts a new `SignalProducer` in its place.
-
 ```Swift
-let (producer, sink) = SignalProducer<String, NSError>.buffer(5)
+let (producer, observer) = SignalProducer<String, NSError>.buffer(5)
 let error = NSError(domain: "domain", code: 0, userInfo: nil)
 
 producer
-    |> catch { error in SignalProducer<String, NSError>(value: "Default") }
-    |> start(next: println)
+    .flatMapError { _ in SignalProducer<String, NoError>(value: "Default") }
+    .startWithNext { next in print(next) }
 
 
-sendNext(sink, "First")     // prints "First"
-sendNext(sink, "Second")    // prints "Second"
-sendError(sink, error)      // prints "Default"
+observer.sendNext("First")     // prints "First"
+observer.sendNext("Second")    // prints "Second"
+observer.sendFailed(error)     // prints "Default"
 ```
 
 ### Retrying
 
 `retry`はエラーが発生した際にオリジナルのSignalProducerを必要な数だけ繰り返します。
 
-The `retry` operator will restart the original `SignalProducer` on error up to `count` times.
-
 ```Swift
 var tries = 0
 let limit = 2
 let error = NSError(domain: "domain", code: 0, userInfo: nil)
-let producer = SignalProducer<String, NSError> { (sink, _) in
+let producer = SignalProducer<String, NSError> { (observer, _) in
     if tries++ < limit {
-        sendError(sink, error)
+        observer.sendFailed(error)
     } else {
-        sendNext(sink, "Success")
-        sendCompleted(sink)
+        observer.sendNext("Success")
+        observer.sendCompleted()
     }
 }
 
 producer
-    |> on(error: {e in println("Error")})             // prints "Error" twice
-    |> retry(2)
-    |> start(next: println,                           // prints "Success"
-            error: { _ in println("Signal Error")})
+    .on(failed: {e in print("Failure")})    // prints "Failure" twice
+    .retry(2)
+    .start { event in
+        switch event {
+        case let .Next(next):
+            print(next)                     // prints "Success"
+        case let .Failed(error):
+            print("Failed: \(error)")
+        case .Completed:
+            print("Completed")
+        case .Interrupted:
+            print("Interrupted")
+        }
+    }
 ```
 
-もし`SignalProducer`が必要なretry分で成功しなかった場合、failします。
-例えば上記の場合、`"Signal Error"`が`"Success"`の代わりに出力されます。
 
-If the `SignalProducer` does not succeed after `count` tries, the resulting `SignalProducer` will fail. E.g., if  `retry(1)` is used in the example above instead of `retry(2)`, `"Signal Error"` will be printed instead of `"Success"`.
+もし`SignalProducer`が必要なretry分で成功しなかった場合、failします。
+例えば上記の場合、`retry(1)`を使った場合、`"Success"`の代わりに`"Signal Failure"`が出力されます。
+
+If the `SignalProducer` does not succeed after `count` tries, the resulting `SignalProducer` will fail. E.g., if  `retry(1)` is used in the example above instead of `retry(2)`, `"Signal Failure"` will be printed instead of `"Success"`.
+
 
 ### Mapping errors
 
 `mapError`はストリーム内で発生した何かしらのエラーを新しいエラーへと変換します。
-
-The `mapError` operator transforms any error in an event stream into a new error. 
 
 ```Swift
 enum CustomError: String, ErrorType {
@@ -450,10 +452,10 @@ enum CustomError: String, ErrorType {
     }
 }
 
-let (signal, sink) = Signal<String, NSError>.pipe()
+let (signal, observer) = Signal<String, NSError>.pipe()
 
 signal
-    |> mapError { (error: NSError) -> CustomError in
+    .mapError { (error: NSError) -> CustomError in
         switch error.domain {
         case "com.example.foo":
             return .Foo
@@ -463,29 +465,27 @@ signal
             return .Other
         }
     }
-    |> observe(error: println)
+    .observeFailed { error in
+        print(error)
+    }
 
-sendError(sink, NSError(domain: "com.example.foo", code: 42, userInfo: nil))    // prints "Foo Error"
+observer.sendFailed(NSError(domain: "com.example.foo", code: 42, userInfo: nil))    // prints "Foo Error"
 ```
 
 ### Promote
 
-`promoteErrors`はイベントストリームを複数のエラーを一つのエラーへと昇格させます。
+`promoteErrors`はイベントストリームがエラーを生成できないものを一つのエラーへと昇格させます。
 
 The `promoteErrors` operator promotes an event stream that does not generate errors into one that can. 
 
 ```Swift
-let (numbersSignal, numbersSink) = Signal<Int, NoError>.pipe()
-let (lettersSignal, lettersSink) = Signal<String, NSError>.pipe()
+let (numbersSignal, numbersObserver) = Signal<Int, NoError>.pipe()
+let (lettersSignal, lettersObserver) = Signal<String, NSError>.pipe()
 
 numbersSignal
-    |> promoteErrors(NSError)
-    |> combineLatestWith(lettersSignal)
+    .promoteErrors(NSError)
+    .combineLatestWith(lettersSignal)
 ```
 
-これらのストリームは実際にはエラーを生成せず、
-The given stream will still not _actually_ generate errors, but this is useful
-because some operators to [combine streams](#combining-event-streams) require
-the inputs to have matching error types.
-
+これらのストリームは実際にはエラーを生成しませんが、これはいくつかのイベントストリームの結合演算子（なにかのエラーを必要とする）において有用です。  
 
