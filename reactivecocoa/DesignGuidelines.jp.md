@@ -1,8 +1,8 @@
 # Design Guidelines
 
-This document contains guidelines for projects that want to make use of
-ReactiveCocoa. The content here is heavily inspired by the [Rx Design
-Guidelines](http://blogs.msdn.com/b/rxteam/archive/2010/10/28/rx-design-guidelines.aspx).
+このドキュメントはReactiveCocoaを使う上でのガイドラインを含みます。
+このドキュメントは[Rx Design
+Guidelines](http://blogs.msdn.com/b/rxteam/archive/2010/10/28/rx-design-guidelines.aspx)に強く影響を受けています。
 
 This document assumes basic familiarity
 with the features of ReactiveCocoa. The [Framework Overview][] is a better
