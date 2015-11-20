@@ -84,7 +84,7 @@ signal.observe(next: { next in
 
 ### Injecting effects
 
-Side effects can be injected on a `SignalProducer` with the `on` operator without actually subscribing to it. 
+副作用は、`SignalProducer`として注入できます。オペレータは`on`を使います。
 
 ```Swift
 let producer = signalProducer
@@ -107,16 +107,15 @@ let producer = signalProducer
     })
 ```
 
-Similar to `observe`, all the parameters are optional and you only need to provide callbacks for the events you care about.
-
-Note that nothing will be printed until `producer` is started (possibly somewhere else).
+`observe`と似ていて、全てはオプショナルです。好きなモノを使ってください。
+Producerをスタートさせないと、なにもプリントされないので気をつけてくださいね。
 
 ## Operator composition
 
 ### Pipe
 
-The `|>` operator can be used to apply a primitive to an event stream. Multiple
-operators can be chained after each other using the `|>` operator:
+`|>` オペレータはイベントストリームを適用する際に利用します。複数のオペレータは連鎖できます。
+こんな感じ：
 
 ```Swift
 intSignal
@@ -127,24 +126,19 @@ intSignal
 
 ### Lifting
 
-`Signal` operators can be _lifted_ to operate upon `SignalProducer`s using the
-`lift` method.
+`Signal`は`SignalProducer`に作用するように`lift`を用い働きかけます。
 
-This will create a new `SignalProducer` which will apply the given operator to
-_every_ `Signal` created, just as if the operator had been applied to each
-produced `Signal` individually.
+これを与えられたそれぞれのSignalの演算子を元にSignalProducerをあらたに作成します。 あたかもそれぞれのSignalに個別に働きかけたかのように。
 
-The `|>` operator implicitly lifts `Signal` operators, so it can be used to
-apply them directly to `SignalProducer`s.
+`|>`演算子は、暗黙のうちにSignal演算子をlistするので、SignalProducerに直接働きかけることができます。
 
 ## Transforming event streams
 
-These operators transform an event stream into a new stream.
+これらのオペレータは、新しいストリームにイベントストリームを変換します。These 
 
 ### Mapping
 
-The `map` operator is used to transform the values in a event stream, creating
-a new stream with the results.
+`map`はイベントストリーム内の値の変換に使われ、新しいストリームを変換結果とともに返します。
 
 ```Swift
 let (signal, sink) = Signal<String, NoError>.pipe()
@@ -158,12 +152,11 @@ sendNext(sink, "b")     // Prints B
 sendNext(sink, "c")     // Prints C
 ```
 
-[Interactive visualisation of the `map` operator.](http://neilpa.me/rac-marbles/#map)
+[mapのよくわかる図式](http://neilpa.me/rac-marbles/#map)
 
 ### Filtering
 
-The `filter` operator is used to only include values in an event stream that
-satisfy a predicate.
+`filter`は宣言されたFunctionを満たしたイベントストリーム内の値のみを変換します。
 
 ```Swift
 let (signal, sink) = Signal<Int, NoError>.pipe()
@@ -178,13 +171,12 @@ sendNext(sink, 3)     // Not printed
 sendNext(sink, 4)     // prints 4
 ```
 
-[Interactive visualisation of the `filter` operator.](http://neilpa.me/rac-marbles/#filter)
+[filterのよくわかる図式](http://neilpa.me/rac-marbles/#filter)
 
-### Aggregating
+### Aggregating（集計）
 
-The `reduce` operator is used to aggregate a event stream’s values into a single
-combined value. Note that the final value is only sent after the input stream
-completes.
+`reduce`はイベントストリーム内の値を集計し、１つの値とします。
+変換した、最後の値のみが送信されることに注意してください
 
 ```Swift
 let (signal, sink) = Signal<Int, NoError>.pipe()
@@ -199,9 +191,9 @@ sendNext(sink, 3)     // nothing printed
 sendCompleted(sink)   // prints 6
 ```
 
-The `collect` operator is used to aggregate a event stream’s values into
-a single array value. Note that the final value is only sent after the input
-stream completes.
+`collect`はイベントストリーム内の値を集計し、配列として変換します。
+変換した、最後の値のみが送信されることに注意してください
+
 
 ```Swift
 let (signal, sink) = Signal<Int, NoError>.pipe()
@@ -216,21 +208,18 @@ sendNext(sink, 3)     // nothing printed
 sendCompleted(sink)   // prints [1, 2, 3]
 ```
 
-[Interactive visualisation of the `reduce` operator.](http://neilpa.me/rac-marbles/#reduce)
+[reduceのよくわかる図式](http://neilpa.me/rac-marbles/#reduce)
 
-## Combining event streams
+## イベントストリームの結合
 
-These operators combine values from multiple event streams into a new, unified
-stream.
+以下は、に複数のイベントストリームを結合し、１つのストリームにします。
 
-### Combining latest values
+### 最新の値の結合
 
-The `combineLatest` function combines the latest values of two (or more) event
-streams.
+`combineLatest`は、2つ（またはそれ以上）のイベントストリームの最新の値を組み合わせます。
 
-The resulting stream will only send its first value after each input has sent at
-least one value. After that, new values on any of the inputs will result in
-a new value on the output.
+各入力で送信された後、得られた最新のストリームのみが値を送信します。
+その後、なにか入力があるたびにそれが新しい値がになります。
 
 ```Swift
 let (numbersSignal, numbersSink) = Signal<Int, NoError>.pipe()
@@ -249,17 +238,16 @@ sendNext(lettersSink, "C")  // prints (2, C)
 sendCompleted(lettersSink)  // prints "Completed"
 ```
 
-The `combineLatestWith` operator works in the same way, but as an operator.
+`combineLatestWith`はオペレータであることを除いて同じように動作します。
 
-[Interactive visualisation of the `combineLatest` operator.](http://neilpa.me/rac-marbles/#combineLatest)
+[`combineLatest`よくわかる図式](http://neilpa.me/rac-marbles/#combineLatest)
 
 ### Zipping
 
-The `zip` function joins values of two (or more) event streams pair-wise. The
-elements of any Nth tuple correspond to the Nth elements of the input streams.
+`zip`は、2つ（またはそれ以上）の値を結合します。
+それぞれN番目のタプルの要素は、入力ストリームのN番目の要素に対応します。
 
-That means the Nth value of the output stream cannot be sent until each input
-has sent at least N values.
+すなわち、出力ストリームのN番目の値がそれぞれ入力されるまで送信できないことを意味します。
 
 ```Swift
 let (numbersSignal, numbersSink) = Signal<Int, NoError>.pipe()
@@ -278,15 +266,15 @@ sendNext(lettersSink, "C")  // prints (2, C) & "Completed"
 
 ```
 
-The `zipWith` operator works in the same way, but as an operator.
-
-[Interactive visualisation of the `zip` operator.](http://neilpa.me/rac-marbles/#zip)
+`zipWith`はオペレータであることを除いて同じように動作します。
+[`zip`よくわかる図式](http://neilpa.me/rac-marbles/#zip)
 
 ## Flattening producers
 
-The `flatten` operator transforms a `SignalProducer`-of-`SignalProducer`s into a single `SignalProducer` whose values are forwarded from the inner producer in accordance with the provided `FlattenStrategy`.
+`flatten`は、SignalProducerとSignalProducerを一つのSignalProducerへと変換します。
+その値は'FlattenSterategy'にしたがって提供されます。
 
-To understand, why there are different strategies and how they compare to each other, take a look at this example and imagine the column offsets as time:
+なぜそれぞれのsterategyが存在するかは、以下のサンプルを参考にすることで、時間などの列オフセットを想像してみてください。
 
 ```Swift
 let values = [
@@ -306,12 +294,14 @@ let latest =
 [ 1, 4,    7,     8 ]
 ```
 
-Note, how the values interleave and which values are even included in the resulting array.
-
+どのように値がインターリーブしているか、また、どのよう値が結果の配列に含まれているか、注意してみてください。
 
 ### Merging
 
-The `.Merge` strategy immediately forwards every value of the inner `SignalProducer`s to the outer `SignalProducer`. Any error sent on the outer producer or any inner producer is immediately sent on the flattened producer and terminates it.
+`merge`はすぐにすべての値をouter`SignalProducer`へと変換します。
+いずれかのproducerで何かしらのエラーが送信された場合、すぐproducerへと変換され切断されます。
+
+strategy immediately forwards every value of the inner `SignalProducer`s to the outer `SignalProducer`. Any error sent on the outer producer or any inner producer is immediately sent on the flattened producer and terminates it.
 
 ```Swift
 let (producerA, lettersSink) = SignalProducer<String, NoError>.buffer(5)
@@ -332,9 +322,13 @@ sendNext(lettersSink, "c")    // prints "c"
 sendNext(numbersSink, "3")    // prints "3"
 ```
 
-[Interactive visualisation of the `flatten(.Merge)` operator.](http://neilpa.me/rac-marbles/#merge)
+[`merge`のよくわかる図式](http://neilpa.me/rac-marbles/#merge)
 
 ### Concatenating
+
+`Concat`は内部Producerの直列化をサポートします。外部Producerはすぐにスタートします。
+続いておこるproducerはそれぞれのproducerがcompleteするまでスタートしません。
+エラーはすぐにproducerへと送られます
 
 The `.Concat` strategy is used to serialize work of the inner `SignalProducer`s. The outer producer is started immediately. Each subsequent producer is not started until the preceeding one has completed. Errors are immediately forwarded to the flattened producer.
 
@@ -359,9 +353,11 @@ sendNext(numbersSink, "3")    // prints "3"
 sendCompleted(numbersSink)
 ```
 
-[Interactive visualisation of the `flatten(.Concat)` operator.](http://neilpa.me/rac-marbles/#concat)
+[`Concat`のよくわかる図式](http://neilpa.me/rac-marbles/#concat)
 
 ### Switching to the latest
+
+`Latest`は最新のinputのみを送信するためのものです。
 
 The `.Latest` strategy forwards only values from the latest input `SignalProducer`.
 
@@ -389,9 +385,15 @@ sendNext(sinkC, "Z")        // prints "Z"
 
 ## Handling errors
 
+これから説明する演算子はエラーがイベントストリーム内で発生したさいに使用するものです。
+
 These operators are used to handle errors that might occur on an event stream.
 
 ### Catching errors
+
+`catch`はなにかのエラーをSignalProducerで受け取るためのものです。
+catchの後に、新しいSignalProducerがスタートします。
+
 
 The `catch` operator catches any error that may occur on the input `SignalProducer`, then starts a new `SignalProducer` in its place.
 
@@ -410,6 +412,8 @@ sendError(sink, error)      // prints "Default"
 ```
 
 ### Retrying
+
+`retry`はエラーが発生した際にオリジナルのSignalProducerを必要な数だけ繰り返します。
 
 The `retry` operator will restart the original `SignalProducer` on error up to `count` times.
 
@@ -433,9 +437,14 @@ producer
             error: { _ in println("Signal Error")})
 ```
 
+もし`SignalProducer`が必要なretry分で成功しなかった場合、failします。
+例えば上記の場合、`"Signal Error"`が`"Success"`の代わりに出力されます。
+
 If the `SignalProducer` does not succeed after `count` tries, the resulting `SignalProducer` will fail. E.g., if  `retry(1)` is used in the example above instead of `retry(2)`, `"Signal Error"` will be printed instead of `"Success"`.
 
 ### Mapping errors
+
+`mapError`はストリーム内で発生した何かしらのエラーを新しいエラーへと変換します。
 
 The `mapError` operator transforms any error in an event stream into a new error. 
 
@@ -474,6 +483,8 @@ sendError(sink, NSError(domain: "com.example.foo", code: 42, userInfo: nil))    
 
 ### Promote
 
+`promoteErrors`はイベントストリームを複数のエラーを一つのエラーへと昇格させます。
+
 The `promoteErrors` operator promotes an event stream that does not generate errors into one that can. 
 
 ```Swift
@@ -485,12 +496,9 @@ numbersSignal
     |> combineLatestWith(lettersSignal)
 ```
 
+これらのストリームは実際にはエラーを生成せず、
 The given stream will still not _actually_ generate errors, but this is useful
 because some operators to [combine streams](#combining-event-streams) require
 the inputs to have matching error types.
 
-
-[Signals]: FrameworkOverview.md#signals
-[Signal Producers]: FrameworkOverview.md#signal-producers
-[Observation]: FrameworkOverview.md#observation
 
