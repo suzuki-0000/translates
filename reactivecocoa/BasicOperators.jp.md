@@ -66,15 +66,18 @@ signal.observe(Signal.Observer { event in
 あるいは、 ` Next`、` ERROR`、Completed`、` Interrupted`イベントが、イベントが応答したときに受け取ることもできます。
 
 ```Swift
-signal.observe(next: { next in
-    println("Next: \(next)")
-}, error: { error in
-    println("Error: \(error)")
-}, completed: {
-    println("Completed")
-}, interrupted: {
-    println("Interrupted")
-})
+signal.observeNext { next in 
+  print("Next: \(next)") 
+}
+signal.observeFailed { error in
+  print("Failed: \(error)")
+}
+signal.observeCompleted { 
+  print("Completed") 
+}
+signal.observeInterrupted { 
+  print("Interrupted")
+}
 ```
 
 すべてはオプショナルであるため、４つのパラメータをすべてを提供する必要はないです。
@@ -86,22 +89,22 @@ signal.observe(next: { next in
 
 ```Swift
 let producer = signalProducer
-    |> on(started: {
-        println("Started")
+    .on(started: {
+        print("Started")
     }, event: { event in
-        println("Event: \(event)")
-    }, error: { error in
-        println("Error: \(error)")
+        print("Event: \(event)")
+    }, failed: { error in
+        print("Failed: \(error)")
     }, completed: {
-        println("Completed")
+        print("Completed")
     }, interrupted: {
-        println("Interrupted")
+        print("Interrupted")
     }, terminated: {
-        println("Terminated")
+        print("Terminated")
     }, disposed: {
-        println("Disposed")
-    }, next: { next in
-        println("Next: \(next)")
+        print("Disposed")
+    }, next: { value in
+        print("Next: \(value)")
     })
 ```
 
@@ -124,15 +127,15 @@ Producerをスタートさせないと、なにもプリントされないので
 `map`はイベントストリーム内の値の変換に使われ、新しいストリームを変換結果とともに返します。
 
 ```Swift
-let (signal, sink) = Signal<String, NoError>.pipe()
+let (signal, observer) = Signal<String, NoError>.pipe()
 
 signal
-    |> map { string in string.uppercaseString }
-    |> observe(next: println)
+    .map { string in string.uppercaseString }
+    .observeNext { next in print(next) }
 
-sendNext(sink, "a")     // Prints A
-sendNext(sink, "b")     // Prints B
-sendNext(sink, "c")     // Prints C
+observer.sendNext("a")     // Prints A
+observer.sendNext("b")     // Prints B
+observer.sendNext("c")     // Prints C
 ```
 
 [mapのよくわかる図式](http://neilpa.me/rac-marbles/#map)
@@ -142,16 +145,16 @@ sendNext(sink, "c")     // Prints C
 `filter`は宣言されたFunctionを満たしたイベントストリーム内の値のみを変換します。
 
 ```Swift
-let (signal, sink) = Signal<Int, NoError>.pipe()
+let (signal, observer) = Signal<Int, NoError>.pipe()
 
 signal
-    |> filter { number in number % 2 == 0 }
-    |> observe(next: println)
+    .filter { number in number % 2 == 0 }
+    .observeNext { next in print(next) }
 
-sendNext(sink, 1)     // Not printed
-sendNext(sink, 2)     // Prints 2
-sendNext(sink, 3)     // Not printed
-sendNext(sink, 4)     // prints 4
+observer.sendNext(1)     // Not printed
+observer.sendNext(2)     // Prints 2
+observer.sendNext(3)     // Not printed
+observer.sendNext(4)     // prints 4
 ```
 
 [filterのよくわかる図式](http://neilpa.me/rac-marbles/#filter)
@@ -162,40 +165,40 @@ sendNext(sink, 4)     // prints 4
 変換した、最後の値のみが送信されることに注意してください
 
 ```Swift
-let (signal, sink) = Signal<Int, NoError>.pipe()
+let (signal, observer) = Signal<Int, NoError>.pipe()
 
 signal
-    |> reduce(1) { $0 * $1 }
-    |> observe(next: println)
+    .reduce(1) { $0 * $1 }
+    .observeNext { next in print(next) }
 
-sendNext(sink, 1)     // nothing printed
-sendNext(sink, 2)     // nothing printed
-sendNext(sink, 3)     // nothing printed
-sendCompleted(sink)   // prints 6
+observer.sendNext(1)     // nothing printed
+observer.sendNext(2)     // nothing printed
+observer.sendNext(3)     // nothing printed
+observer.sendCompleted()   // prints 6
 ```
+
 
 `collect`はイベントストリーム内の値を集計し、配列として変換します。
 変換した、最後の値のみが送信されることに注意してください
 
-
 ```Swift
-let (signal, sink) = Signal<Int, NoError>.pipe()
+let (signal, observer) = Signal<Int, NoError>.pipe()
 
-let collected = signal |> collect
+signal
+    .collect()
+    .observeNext { next in print(next) }
 
-collected.observe(next: println)
-
-sendNext(sink, 1)     // nothing printed
-sendNext(sink, 2)     // nothing printed
-sendNext(sink, 3)     // nothing printed
-sendCompleted(sink)   // prints [1, 2, 3]
+observer.sendNext(1)     // nothing printed
+observer.sendNext(2)     // nothing printed
+observer.sendNext(3)     // nothing printed
+observer.sendCompleted()   // prints [1, 2, 3]
 ```
 
 [reduceのよくわかる図式](http://neilpa.me/rac-marbles/#reduce)
 
 ## イベントストリームの結合
 
-以下は、に複数のイベントストリームを結合し、１つのストリームにします。
+複数のイベントストリームを結合し、１つのストリームにします。
 
 ### 最新の値の結合
 
@@ -205,20 +208,21 @@ sendCompleted(sink)   // prints [1, 2, 3]
 その後、なにか入力があるたびにそれが新しい値がになります。
 
 ```Swift
-let (numbersSignal, numbersSink) = Signal<Int, NoError>.pipe()
-let (lettersSignal, lettersSink) = Signal<String, NoError>.pipe()
+let (numbersSignal, numbersObserver) = Signal<Int, NoError>.pipe()
+let (lettersSignal, lettersObserver) = Signal<String, NoError>.pipe()
 
-combineLatest(numbersSignal, lettersSignal)
-    |> observe(next: println, completed: { println("Completed") })
+let signal = combineLatest(numbersSignal, lettersSignal)
+signal.observeNext { next in print("Next: \(next)") }
+signal.observeCompleted { print("Completed") }
 
-sendNext(numbersSink, 0)    // nothing printed
-sendNext(numbersSink, 1)    // nothing printed
-sendNext(lettersSink, "A")  // prints (1, A)
-sendNext(numbersSink, 2)    // prints (2, A)
-sendCompleted(numbersSink)  // nothing printed
-sendNext(lettersSink, "B")  // prints (2, B)
-sendNext(lettersSink, "C")  // prints (2, C)
-sendCompleted(lettersSink)  // prints "Completed"
+numbersObserver.sendNext(0)      // nothing printed
+numbersObserver.sendNext(1)      // nothing printed
+lettersObserver.sendNext("A")    // prints (1, A)
+numbersObserver.sendNext(2)      // prints (2, A)
+numbersObserver.sendCompleted()  // nothing printed
+lettersObserver.sendNext("B")    // prints (2, B)
+lettersObserver.sendNext("C")    // prints (2, C)
+lettersObserver.sendCompleted()  // prints "Completed"
 ```
 
 `combineLatestWith`はオペレータであることを除いて同じように動作します。
@@ -233,19 +237,20 @@ sendCompleted(lettersSink)  // prints "Completed"
 すなわち、出力ストリームのN番目の値がそれぞれ入力されるまで送信できないことを意味します。
 
 ```Swift
-let (numbersSignal, numbersSink) = Signal<Int, NoError>.pipe()
-let (lettersSignal, lettersSink) = Signal<String, NoError>.pipe()
+let (numbersSignal, numbersObserver) = Signal<Int, NoError>.pipe()
+let (lettersSignal, lettersObserver) = Signal<String, NoError>.pipe()
 
-zip(numbersSignal, lettersSignal)
-    |> observe(next: println, completed: { println("Completed") })
+let signal = zip(numbersSignal, lettersSignal)
+signal.observeNext { next in print("Next: \(next)") }
+signal.observeCompleted { print("Completed") }
 
-sendNext(numbersSink, 0)    // nothing printed
-sendNext(numbersSink, 1)    // nothing printed
-sendNext(lettersSink, "A")  // prints (0, A)
-sendNext(numbersSink, 2)    // nothing printed
-sendCompleted(numbersSink)  // nothing printed
-sendNext(lettersSink, "B")  // prints (1, B)
-sendNext(lettersSink, "C")  // prints (2, C) & "Completed"
+numbersObserver.sendNext(0)      // nothing printed
+numbersObserver.sendNext(1)      // nothing printed
+lettersObserver.sendNext("A")    // prints (0, A)
+numbersObserver.sendNext(2)      // nothing printed
+numbersObserver.sendCompleted()  // nothing printed
+lettersObserver.sendNext("B")    // prints (1, B)
+lettersObserver.sendNext("C")    // prints (2, C) & "Completed"
 
 ```
 
@@ -281,29 +286,28 @@ let latest =
 
 ### Merging
 
-`merge`はすぐにすべての値をouter`SignalProducer`へと変換します。
-いずれかのproducerで何かしらのエラーが送信された場合、すぐproducerへと変換され切断されます。
-
-strategy immediately forwards every value of the inner `SignalProducer`s to the outer `SignalProducer`. Any error sent on the outer producer or any inner producer is immediately sent on the flattened producer and terminates it.
+`merge`はinner`SignalProducer`の値をすぐにouter`SignalProducer`へと送信します。
+いずれかのproducerで何かしらのエラーが送信された場合、すぐに１つのSignalProducerへと変換され、切断されます。
 
 ```Swift
-let (producerA, lettersSink) = SignalProducer<String, NoError>.buffer(5)
-let (producerB, numbersSink) = SignalProducer<String, NoError>.buffer(5)
-let (signal, sink) = SignalProducer<SignalProducer<String, NoError>, NoError>.buffer(5)
+let (producerA, lettersObserver) = SignalProducer<String, NoError>.buffer(5)
+let (producerB, numbersObserver) = SignalProducer<String, NoError>.buffer(5)
+let (signal, observer) = SignalProducer<SignalProducer<String, NoError>, NoError>.buffer(5)
 
-signal |> flatten(FlattenStrategy.Merge) |> start(next: println)
+signal.flatten(.Merge).startWithNext { next in print(next) }
 
-sendNext(sink, producerA)
-sendNext(sink, producerB)
-sendCompleted(sink)
+observer.sendNext(producerA)
+observer.sendNext(producerB)
+observer.sendCompleted()
 
-sendNext(lettersSink, "a")    // prints "a"
-sendNext(numbersSink, "1")    // prints "1"
-sendNext(lettersSink, "b")    // prints "b"
-sendNext(numbersSink, "2")    // prints "2"
-sendNext(lettersSink, "c")    // prints "c"
-sendNext(numbersSink, "3")    // prints "3"
+lettersObserver.sendNext("a")    // prints "a"
+numbersObserver.sendNext("1")    // prints "1"
+lettersObserver.sendNext("b")    // prints "b"
+numbersObserver.sendNext("2")    // prints "2"
+lettersObserver.sendNext("c")    // prints "c"
+numbersObserver.sendNext("3")    // prints "3"
 ```
+
 
 [`merge`のよくわかる図式](http://neilpa.me/rac-marbles/#merge)
 
