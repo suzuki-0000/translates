@@ -9,7 +9,7 @@ ReactiveCocoa. The content here is heavily inspired by the [Rx Design
 Guidelines](http://blogs.msdn.com/b/rxteam/archive/2010/10/28/rx-design-guidelines.aspx).
 
 このドキュメントでは、RACの基本的な知識があることを前提とします。
-`Framework Overview.md`はRACが提供するコンセプトを理解するのを助けます。
+`Framework Overview.md`が基本的なRACが提供するコンセプトを理解するのを助けるでしょう。
 
 This document assumes basic familiarity
 with the features of ReactiveCocoa. The [Framework Overview][] is a better
@@ -40,11 +40,10 @@ resource for getting up to speed on the main types and concepts provided by RAC.
 
  1. [Signalは、startされて初めてインスタンスを生成]
  1. [SignalはObervingすることでの副作用はない]
- 1. [SignalのすべてのObserverは同じイベントを同じ順序で見る]
- 1. [Signalは
+ 1. [SignalのすべてのObserverは同じイベントを同じ順序]
+ 1. [SignalはObserverがリリースされるまで保持される]
+ 1. [Eventを切断することでSignalのリソースを廃棄する]
  
-
-
  1. [Signals start work when instantiated](#signals-start-work-when-instantiated)
  1. [Observing a signal does not have side effects](#observing-a-signal-does-not-have-side-effects)
  1. [All observers of a signal see the same events in the same order](#all-observers-of-a-signal-see-the-same-events-in-the-same-order)
@@ -53,6 +52,11 @@ resource for getting up to speed on the main types and concepts provided by RAC.
 
 **[The `SignalProducer` contract](#the-signalproducer-contract)**
 
+ 1. [SignalProducerはSignalの作成によってstartする]
+ 1. [produceされたSignalはそれぞれ異なるタイミングで異なるeventを送信しうる]
+ 1. [Signal演算子によりSignalProducerを操作しうる]
+ 1. [DisposeしたproduceされたSignalは中断される]
+
  1. [Signal producers start work on demand by creating signals](#signal-producers-start-work-on-demand-by-creating-signals)
  1. [Each produced signal may send different events at different times](#each-produced-signal-may-send-different-events-at-different-times)
  1. [Signal operators can be lifted to apply to signal producers](#signal-operators-can-be-lifted-to-apply-to-signal-producers)
@@ -60,6 +64,13 @@ resource for getting up to speed on the main types and concepts provided by RAC.
 
 **[Best practices](#best-practices)**
 
+ 1. [Processは必要な数だけ]
+ 1. [scheduler上でEventをObserveする]
+ 1. [schedulerのスイッチは可能な限り少ない箇所で]
+ 1. [SignalProducer内で副作用を処理する]
+ 1. [SignalProduerの副作用は、一つのproduceされたSignalで行わせる]
+ 1. [ライフサイクルの管理は、明示的なdisposal演算子を用いる]
+ 
  1. [Process only as many values as needed](#process-only-as-many-values-as-needed)
  1. [Observe events on a known scheduler](#observe-events-on-a-known-scheduler)
  1. [Switch schedulers in as few places as possible](#switch-schedulers-in-as-few-places-as-possible)
