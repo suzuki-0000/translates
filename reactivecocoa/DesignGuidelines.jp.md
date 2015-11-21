@@ -17,7 +17,7 @@ resource for getting up to speed on the main types and concepts provided by RAC.
 
 **[The `Event` contract](#the-event-contract)**
 
- 1. [`Next`が値を提供したり、イベントの発生を示す]
+ 1. [Nextが値を提供したり、イベントの発生を示す]
  1. [Failuresは例外のように動作し、即座に送信する]
  1. [Completionは成功を示す]
  1. [Interruptは、処理をキャンセルし、通常はすぐ送信する]
@@ -80,6 +80,13 @@ resource for getting up to speed on the main types and concepts provided by RAC.
 
 **[Implementing new operators](#implementing-new-operators)**
 
+ 1. [Signal/SignalProducerに適用させる演算子の記述に備える]
+ 1. [可能であれば存在する演算子で構成する]
+ 1. [可能な限り早くFailure/InterruptionのEventへと進める]
+ 1. [Eventの値でスイッチする]
+ 1. [並列性は避ける]
+ 1. [演算子内でブロッキング処理は避ける]
+
  1. [Prefer writing operators that apply to both signals and producers](#prefer-writing-operators-that-apply-to-both-signals-and-producers)
  1. [Compose existing operators when possible](#compose-existing-operators-when-possible)
  1. [Forward failure and interruption events as soon as possible](#forward-failure-and-interruption-events-as-soon-as-possible)
@@ -89,14 +96,30 @@ resource for getting up to speed on the main types and concepts provided by RAC.
 
 ## The `Event` contract
 
+EventはReactiveCocoaにとってコアといえます。Signal/SignalProducerがEventを送信し、それは"イベントストリーム"と称することができます。
+
 [Events][] are fundamental to ReactiveCocoa. [Signals][] and [signal producers][] both send
 events, and may be collectively called “event streams.”
+
+イベントストリームは以下の文法でなければいけません。
+
+```
+Next* (Interrupted | Failed | Completed)?
+```
 
 Event streams must conform to the following grammar:
 
 ```
 Next* (Interrupted | Failed | Completed)?
 ```
+
+このイベントストリームは
+
+ 1. いくつかの`Next`イベント
+ 1. Optionalの中断イベント、`Interrupted`、`Failed`、`Completed`
+
+イベントが中断されたあとは、もうイベントをうけとることはありません。
+
 
 This states that an event stream consists of:
 
@@ -107,16 +130,35 @@ After a terminating event, no other events will be received.
 
 #### `Next`s provide values or indicate the occurrence of events
 
+ 1. [Nextが値を提供したり、イベントの発生を示す]
+ 1. [Failuresは例外のように動作し、即座に送信する]
+ 1. [Completionは成功を示す]
+ 1. [Interruptは、処理をキャンセルし、通常はすぐ送信する]
+ 1. [EventはSerialである]
+ 1. [Eventは再帰的に送信することはできない] 
+ 1. [Eventはデフォルトでは同期的に送信される]
+
+`Next`は"Value"と言われる値を持っています。
+ということは、イベントストリームはいくつかの`Next`を含み、
+それぞれのタイプが同じであることを除いて、いくつかの制限が存在します。
+
 `Next` events contain a payload known as the “value.” Only `Next` events are
 said to have a value. Since an event stream can contain any number of `Next`s,
 there are few restrictions on what those values can mean or be used for, except
 that they must be of the same type.
+
+例えば、Valueはコレクションから要素を表したり、
+いくつかの長時間実行操作に関する進捗状況であったします。
+ NextイベントのValueは何も表現しないこともあるかもしれません。
+ それは`()`であり、具体的になにかがおこったというよりも、なにかが起こったということを示すためにあります。
 
 As an example, the value might represent an element from a collection, or
 a progress update about some long-running operation. The value of a `Next` event
 might even represent nothing at all—for example, it’s common to use a value type
 of `()` to indicate that something happened, without being more specific about
 what that something was.
+
+ほとんどの・・・
 
 Most of the event stream [operators][] act upon `Next` events, as they represent the
 “meaningful data” of a signal or producer.
