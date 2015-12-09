@@ -196,18 +196,16 @@ event cannot be sent upon the stream.
 #### Completion indicates success
 #### Completionは成功を示す
 
+操作が成功した場合か、正常に中断された場合、イベントストリームは`Completed`を送信します。
+多くの演算子が`Completed`を操作し、そのイベントストリーム上の寿命を短縮したり延長したりします。
+例えば、`take`はいくつかのvalueを受け取ったあとにcompleteとします。
+言い方を変えると、signalかproducerが受け入れるほとんどの演算子は、`Completed`イベントを送信する前のイベントがすべて完了するまで待ちます。結果は通常、すべての入力に依存します。
 
- 1. [Interruptは、処理をキャンセルし、通常はすぐ送信する]
- 1. [EventはSerialである]
- 1. [Eventは再帰的に送信することはできない] 
- 1. [Eventはデフォルトでは同期的に送信される]
 
 An event stream sends `Completed` when the operation has completed successfully,
 or to indicate that the stream has terminated normally.
-
 Many operators manipulate the `Completed` event to shorten or extend the
 lifetime of an event stream.
-
 For example, [`take`][take] will complete after the specified number of values have
 been received, thereby terminating the stream early. On the other hand, most
 operators that accept multiple signals or producers will wait until _all_ of
@@ -215,6 +213,15 @@ them have completed before forwarding a `Completed` event, since a successful
 outcome will usually depend on all the inputs.
 
 #### Interruption cancels outstanding work and usually propagates immediately
+#### Interruptは、処理をキャンセルし、通常はすぐ送信する
+
+`Interrupted`はイベントストリームがキャンセルされた時に送信されます。
+中断はsuccessかfailureが成功しなかったが、それは最後まで終わらなかったからで、failではない場合です。
+ほとんどの演算子は中断をすぐに伝達しますが、しかし例外もあります。
+例えば、`flatten`は内部Producerで起こった何かしらのを、無視するので、内部処理は不必要に大きな単位の処理をキャンセルすべきではありません。
+
+RACは`disposal`時に自動的に`Interrupted`を送信しますが、もし必要であれば手動で送ることができます。
+加えて、カスタム演算子は必ず中断イベントを送信する必要があります。
 
 An `Interrupted` event is sent when an event stream should cancel processing.
 Interruption is somewhere between [success](#completion-indicates-success)
@@ -233,6 +240,7 @@ operators](#implementing-new-operators) must make sure to forward interruption
 events to the observer.
 
 #### Events are serial
+ 1. [EventはSerialである]
 
 RAC guarantees that all events upon a stream will arrive serially. In other
 words, it’s impossible for the observer of a signal or producer to receive
@@ -242,6 +250,8 @@ simultaneously.
 This simplifies [operator][Operators] implementations and [observers][].
 
 #### Events cannot be sent recursively
+ 1. [Eventは再帰的に送信することはできない] 
+ 1. [Eventはデフォルトでは同期的に送信される]
 
 Just like RAC guarantees that [events will not be received
 concurrently](#events-are-serial), it also guarantees that they won’t be
