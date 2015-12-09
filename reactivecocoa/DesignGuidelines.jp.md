@@ -15,9 +15,9 @@ This document assumes basic familiarity
 with the features of ReactiveCocoa. The [Framework Overview][] is a better
 resource for getting up to speed on the main types and concepts provided by RAC.
 
-**[The `Event` contract](#the-event-contract)**
+**[`Event`について]
 
- 1. [Nextが値を提供したり、イベントの発生を示す]
+ 1. [Nextは値を提供したり、イベントの発生を示す]
  1. [Failuresは例外のように動作し、即座に送信する]
  1. [Completionは成功を示す]
  1. [Interruptは、処理をキャンセルし、通常はすぐ送信する]
@@ -94,9 +94,13 @@ resource for getting up to speed on the main types and concepts provided by RAC.
  1. [Avoid introducing concurrency](#avoid-introducing-concurrency)
  1. [Avoid blocking in operators](#avoid-blocking-in-operators)
 
-## The `Event` contract
 
-EventはReactiveCocoaにとってコアといえます。Signal/SignalProducerがEventを送信し、それは"イベントストリーム"と称することができます。
+## `Event`について
+
+EventはReactiveCocoaにとってコアといえます。
+Signal/SignalProducerがEventを送信し、それは"イベントストリーム"と称することができます。
+
+## The `Event` contract
 
 [Events][] are fundamental to ReactiveCocoa. [Signals][] and [signal producers][] both send
 events, and may be collectively called “event streams.”
@@ -107,19 +111,19 @@ events, and may be collectively called “event streams.”
 Next* (Interrupted | Failed | Completed)?
 ```
 
+このイベントストリームは以下の要素から構成されます。
+
+ 1. いくつかの`Next`イベント
+ 2. Optionalの中断イベント、`Interrupted`、`Failed`、`Completed`
+
+イベントが中断されたあとは、もうイベントをうけとることはありません。
+
+
 Event streams must conform to the following grammar:
 
 ```
 Next* (Interrupted | Failed | Completed)?
 ```
-
-このイベントストリームは
-
- 1. いくつかの`Next`イベント
- 1. Optionalの中断イベント、`Interrupted`、`Failed`、`Completed`
-
-イベントが中断されたあとは、もうイベントをうけとることはありません。
-
 
 This states that an event stream consists of:
 
@@ -128,18 +132,13 @@ This states that an event stream consists of:
 
 After a terminating event, no other events will be received.
 
+
+#### `Next`は値を提供したり、イベントの発生を示す
 #### `Next`s provide values or indicate the occurrence of events
 
- 1. [Nextが値を提供したり、イベントの発生を示す]
- 1. [Failuresは例外のように動作し、即座に送信する]
- 1. [Completionは成功を示す]
- 1. [Interruptは、処理をキャンセルし、通常はすぐ送信する]
- 1. [EventはSerialである]
- 1. [Eventは再帰的に送信することはできない] 
- 1. [Eventはデフォルトでは同期的に送信される]
-
 `Next`は"Value"と言われる値を持っています。
-ということは、イベントストリームはいくつかの`Next`を含み、
+`Next`イベントだけが、値を持っているという言い方ができます。
+ゆえに、イベントストリームはいくつかの`Next`を含み、
 それぞれのタイプが同じであることを除いて、いくつかの制限が存在します。
 
 `Next` events contain a payload known as the “value.” Only `Next` events are
@@ -147,10 +146,9 @@ said to have a value. Since an event stream can contain any number of `Next`s,
 there are few restrictions on what those values can mean or be used for, except
 that they must be of the same type.
 
-例えば、Valueはコレクションから要素を表したり、
-いくつかの長時間実行操作に関する進捗状況であったします。
- NextイベントのValueは何も表現しないこともあるかもしれません。
- それは`()`であり、具体的になにかがおこったというよりも、なにかが起こったということを示すためにあります。
+例えば、"Value"はコレクションから要素を表したり、いくつかの長時間実行操作に関するものかもしれません。
+ `Next`イベントのValueは何も表現しないこともあるかもしれません。
+それは`()`として使うことができ、具体的になにかがおこったというよりも、なにかが起こったということを示すためにあります。
 
 As an example, the value might represent an element from a collection, or
 a progress update about some long-running operation. The value of a `Next` event
@@ -158,29 +156,51 @@ might even represent nothing at all—for example, it’s common to use a value 
 of `()` to indicate that something happened, without being more specific about
 what that something was.
 
-ほとんどの・・・
+ほとんどのイベント上のストリームは`Next`上で動作し、Signal/SignalProduerによって、意味のあるデータとして表現されます。
 
 Most of the event stream [operators][] act upon `Next` events, as they represent the
 “meaningful data” of a signal or producer.
 
 #### Failures behave like exceptions and propagate immediately
+#### Failuresは例外のように動作し、即座に送信する
+
+`Failed`イベントはなにか悪いことが起こったということを示し、
+なにが起こったかというエラーを返します。
+これは致命的なので、可能な限り早く消費者に操作できるように伝達されます。
 
 `Failed` events indicate that something went wrong, and contain a concrete error
 that indicates what happened. Failures are fatal, and propagate as quickly as
 possible to the consumer for handling.
 
+この失敗は例外として振るまいを持ち、"skip"演算子でエラーを飛ばすこともできます。
+逆にいうと、ほとんどの演算子はエラーが発生するとすぐに処理を中断します。
+これはtime-shifted演算子にすら適用され、`delay`などの名前にかかわらずすぐに伝達されます。
+
 Failures also behave like exceptions, in that they “skip” operators, terminating
 them along the way. In other words, most [operators][] immediately stop doing
 work when a failure is received, and then propagate the failure onward. This even applies to time-shifted operators, like [`delay`][delay]—which, despite its name, will forward any failures immediately.
 
+結果的に、失敗は「普通でない」中断として扱われるべきです。
+もし演算子に重要な処理を終わらせたければ、`Next`で行われるのが適切です。
+
 Consequently, failures should only be used to represent “abnormal” termination. If it is important to let operators (or consumers) finish their work, a `Next`
 event describing the result might be more appropriate.
+
+もしイベントストリームが失敗させない場合、`NoError`としてパラメータ化してください。
+これをすることで`Failed`イベントはイベントストリーム上で実行されません。
 
 If an event stream can _never_ fail, it should be parameterized with the
 special [`NoError`][NoError] type, which statically guarantees that a `Failed`
 event cannot be sent upon the stream.
 
 #### Completion indicates success
+#### Completionは成功を示す
+
+
+ 1. [Interruptは、処理をキャンセルし、通常はすぐ送信する]
+ 1. [EventはSerialである]
+ 1. [Eventは再帰的に送信することはできない] 
+ 1. [Eventはデフォルトでは同期的に送信される]
 
 An event stream sends `Completed` when the operation has completed successfully,
 or to indicate that the stream has terminated normally.
