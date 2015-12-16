@@ -359,18 +359,15 @@ event](#signals-are-retained-until-a-terminating-event-occurs).
 #### SignalのすべてのObserverは同じイベントを同じ順序でこなす
 
 Observerは副作用を持ち得ないので、Signalはイベントをカスタマイズすることはできません。
-イベントをカスタマイズします。イベントは信号に送信されると、
-それはなります[同期] （ ＃イベントは- -送信され、同期・バイ・デフォルト）
-多くのと同じように、その時点で接続されているすべてのオブザーバに配信
-どのように` NSNotificationCenter`が通知を送信します。
+シグナルからイベントが送信されるとき、同期的に全てのObserverに配信されます。
+` NSNotificationCenter`のそれと同じように。
 
-つまり、観察ごとに異なる​​イベント「タイムライン」がありません。オール
-オブザーバーは、効果的にイベントの同じストリームを参照してください。
+つまり、Observerごとに異なるイベントストリーム（タイムライン）ではありません。
+すべてのObserverは効率的に同じイベントストリームを参照します。
 
-このルールの例外があります。それ_after_信号にオブザーバを追加します
-既に正確に一つになります終了しました
-[` Interrupted` ] （ ＃中断は、キャンセル-優れたワーク・アンド・通常-伝搬する-すぐ）
-イベントは、その特定の観察者に送りました。
+このルールの例外があります。
+Observerに、すでに中断されたシグナルを追加する場合、必ず１つの`Interrupted`イベントが
+指定のObserverに送られます。
 
 Because [observation does not have side
 effects](#observing-a-signal-does-not-have-side-effects), a `Signal` never
