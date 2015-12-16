@@ -285,6 +285,15 @@ an already-running event handler.
 #### Events are sent synchronously by default
 #### Eventはデフォルトでは同期的に送信される
 
+RACは、暗黙的に同時実行または非同期実行を導入していません。
+スケジューラ演算子により、明示的に呼び出さなければいけません。
+
+通常Signal,Producerは、同期的にすべてのイベントを送信します。
+デフォルトではObserverは同期的に、それぞれのイベントごとに（イベントが送信されるたびに）呼び出されます。
+イベントストリームはイベントが終わるまで再開しません。
+
+これは`UIControl`、` NSNotificationCenter`の処理に似ています。
+
 
 RAC does not implicitly introduce concurrency or asynchrony. [Operators][] that
 accept a [scheduler][Schedulers] may, but they must be explicitly invoked by the consumer of
@@ -299,7 +308,12 @@ This is similar to how `NSNotificationCenter` or `UIControl` events are
 distributed.
 
 ## The `Signal` contract
-
+ 1. [Signalは、startされて初めてインスタンスを生成]
+ 1. [SignalはObervingすることでの副作用はない]
+ 1. [SignalのすべてのObserverは同じイベントを同じ順序]
+ 1. [SignalはObserverがリリースされるまで保持される]
+ 1. [Eventを切断することでSignalのリソースを廃棄する]
+ 2. 
 A [signal][Signals] is an “always on” stream that obeys [the `Event`
 contract](#the-event-contract).
 
