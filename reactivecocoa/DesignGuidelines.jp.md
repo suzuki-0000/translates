@@ -294,7 +294,6 @@ RACは、暗黙的に同時実行または非同期実行を導入していま�
 
 これは`UIControl`、` NSNotificationCenter`の処理に似ています。
 
-
 RAC does not implicitly introduce concurrency or asynchrony. [Operators][] that
 accept a [scheduler][Schedulers] may, but they must be explicitly invoked by the consumer of
 the framework.
@@ -308,12 +307,15 @@ This is similar to how `NSNotificationCenter` or `UIControl` events are
 distributed.
 
 ## The `Signal` contract
- 1. [Signalは、startされて初めてインスタンスを生成]
- 1. [SignalはObervingすることでの副作用はない]
- 1. [SignalのすべてのObserverは同じイベントを同じ順序]
- 1. [SignalはObserverがリリースされるまで保持される]
- 1. [Eventを切断することでSignalのリソースを廃棄する]
- 2. 
+## `Signal`について
+
+シグナルは常にイベントに従います。
+
+シグナルは参照型で、それぞれのシグナルはそれぞれ独自性がある、つまり、
+シグナル自体がそのライフタイムを有し、そして最終的に終了することができます。
+終了したら、Signalは再起動することはできません。
+
+
 A [signal][Signals] is an “always on” stream that obeys [the `Event`
 contract](#the-event-contract).
 
@@ -322,6 +324,14 @@ signal has its own lifetime, and may eventually terminate. Once terminated,
 a signal cannot be restarted.
 
 #### Signals start work when instantiated
+#### Signalは、startされて初めてインスタンスを生成
+
+シグナルの初期化により、すぐに生成されたクロージャーを実行します。
+これは初期化時点で何からの副作用が起こる可能性があることを意味します。
+
+また、初期化するより前にイベントを送信することもできます。
+しかし、Observerがこの時点でアタッチできなくなってからは、送信されるイベントを受信することはできません。
+
 
 [`Signal.init`][Signal.init] immediately executes the generator closure that is passed to it.
 This means that side effects may occur even before the initializer returns.
@@ -331,6 +341,12 @@ since it is impossible for any [observers][] to be attached at this point, any
 events sent this way cannot be received.
 
 #### Observing a signal does not have side effects
+#### SignalはObervingすることでの副作用はない
+
+処理を紐付けられたシグナルは、Observerが追加されても削除されても、開始、または停止することはありません。
+なのでObserveメソッドは副作用を持ちえません。
+
+シグナルの副作用の停止は、シグナルの中断を通してのみ可能です。
 
 The work associated with a `Signal` does not start or stop when [observers][] are
 added or removed, so the [`observe`][observe] method (or the cancellation thereof) never
@@ -340,6 +356,21 @@ A signal’s side effects can only be stopped through [a terminating
 event](#signals-are-retained-until-a-terminating-event-occurs).
 
 #### All observers of a signal see the same events in the same order
+#### SignalのすべてのObserverは同じイベントを同じ順序でこなす
+
+Observerは副作用を持ち得ないので、Signalはイベントをカスタマイズすることはできません。
+イベントをカスタマイズします。イベントは信号に送信されると、
+それはなります[同期] （ ＃イベントは- -送信され、同期・バイ・デフォルト）
+多くのと同じように、その時点で接続されているすべてのオブザーバに配信
+どのように` NSNotificationCenter`が通知を送信します。
+
+つまり、観察ごとに異なる​​イベント「タイムライン」がありません。オール
+オブザーバーは、効果的にイベントの同じストリームを参照してください。
+
+このルールの例外があります。それ_after_信号にオブザーバを追加します
+既に正確に一つになります終了しました
+[` Interrupted` ] （ ＃中断は、キャンセル-優れたワーク・アンド・通常-伝搬する-すぐ）
+イベントは、その特定の観察者に送りました。
 
 Because [observation does not have side
 effects](#observing-a-signal-does-not-have-side-effects), a `Signal` never
@@ -357,6 +388,8 @@ has already terminated will result in exactly one
 event sent to that specific observer.
 
 #### A signal is retained until the underlying observer is released
+#### SignalはObserverがリリースされるまで保持される
+
 
 Even if the caller does not maintain a reference to the `Signal`:
 
@@ -373,6 +406,8 @@ sent upon it. This should usually be avoided, as it can result in resource
 leaks, but is sometimes useful to disable termination.
 
 #### Terminating events dispose of signal resources
+#### Eventを切断することでSignalのリソースを廃棄する
+
 
 When a terminating [event][Events] is sent along a `Signal`, all [observers][] will be
 released, and any resources being used to generate events should be disposed of.
