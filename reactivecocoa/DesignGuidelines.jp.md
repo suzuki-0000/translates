@@ -240,7 +240,13 @@ operators](#implementing-new-operators) must make sure to forward interruption
 events to the observer.
 
 #### Events are serial
- 1. [EventはSerialである]
+#### EventはSerialである
+
+RACはイベントストリーム上のすべてのイベントがシリアルであることを保証します。
+言い換えると、signalまたはproducerのobserverは複数のイベントを同時に受け取ることは不可能です。
+それがもし複数のスレッドによって同時に送信されたとしてもです。
+
+
 
 RAC guarantees that all events upon a stream will arrive serially. In other
 words, it’s impossible for the observer of a signal or producer to receive
@@ -252,6 +258,7 @@ This simplifies [operator][Operators] implementations and [observers][].
 #### Events cannot be sent recursively
  1. [Eventは再帰的に送信することはできない] 
  1. [Eventはデフォルトでは同期的に送信される]
+
 
 Just like RAC guarantees that [events will not be received
 concurrently](#events-are-serial), it also guarantees that they won’t be
