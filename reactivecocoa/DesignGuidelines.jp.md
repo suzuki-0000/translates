@@ -247,7 +247,6 @@ RACはイベントストリーム上のすべてのイベントがシリアル�
 それがもし複数のスレッドによって同時に送信されたとしてもです。
 
 
-
 RAC guarantees that all events upon a stream will arrive serially. In other
 words, it’s impossible for the observer of a signal or producer to receive
 multiple `Event`s concurrently, even if the events are sent on multiple threads
@@ -256,8 +255,17 @@ simultaneously.
 This simplifies [operator][Operators] implementations and [observers][].
 
 #### Events cannot be sent recursively
- 1. [Eventは再帰的に送信することはできない] 
- 1. [Eventはデフォルトでは同期的に送信される]
+#### Eventは再帰的に送信することはできない
+
+RACが複数のイベントを同時に受け取ることを保証しないように、
+イベントは再帰的に受け取ることもできません。
+
+もしイベントがすでに処理中の以前のイベントからのイベントである場合、デッドロックが発生します。
+再帰的なシグナルは基本的にプログラミングミスとして捉えます。
+デットロックの発生は、処理過程の出力結果がイベントなどの順序やタイミングと予期しない（危険な）依存関係にある場合に発生すべきです。
+
+再帰的な信号が望ましい場合、delay演算子などでタイムシフトされるべきで、
+それはイベントがすでに実行中でないことを保証する必要があります。
 
 
 Just like RAC guarantees that [events will not be received
@@ -275,6 +283,8 @@ time-shifted, with an operator like [`delay`][delay], to ensure that it isn’t 
 an already-running event handler.
 
 #### Events are sent synchronously by default
+#### Eventはデフォルトでは同期的に送信される
+
 
 RAC does not implicitly introduce concurrency or asynchrony. [Operators][] that
 accept a [scheduler][Schedulers] may, but they must be explicitly invoked by the consumer of
