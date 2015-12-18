@@ -359,13 +359,12 @@ event](#signals-are-retained-until-a-terminating-event-occurs).
 #### SignalのすべてのObserverは同じイベントを同じ順序でこなす
 
 Observerは副作用を持ち得ないので、Signalはイベントをカスタマイズすることはできません。
-シグナルからイベントが送信されるとき、同期的に全てのObserverに配信されます。
-` NSNotificationCenter`のそれと同じように。
+シグナルからイベントが送信されるとき、`NSNotificationCenter`と同じように、同期的に全てのObserverに配信されます。
 
-つまり、Observerごとに異なるイベントストリーム（タイムライン）ではありません。
+つまり、Observerごとに異なるイベントストリーム（タイムライン）でないということです。
 すべてのObserverは効率的に同じイベントストリームを参照します。
 
-このルールの例外があります。
+このルールの例外が１つあります。
 Observerに、すでに中断されたシグナルを追加する場合、必ず１つの`Interrupted`イベントが
 指定のObserverに送られます。
 
@@ -387,6 +386,15 @@ event sent to that specific observer.
 #### A signal is retained until the underlying observer is released
 #### SignalはObserverがリリースされるまで保持される
 
+もし呼び出し側がSignalへの参照を保持していない場合でも
+
+ - Signal.initで生成されたシグナルは、生成されたクロージャーがObserverの引数を解放するまで保持し続けます。
+ - Signal.pipeで生成されたシグナルは、返却されたObserverがリリースされるまで保持し続けます。
+
+これは長時間作業することを割り当てられたSignalが、途中で解放されないことを保証するためです。
+
+注意してほしいのは、SignalはTerminatingイベントが送信される前に解放可能であるということです。
+これは通常リークを引き起こすため避けられるべきですが、時には中断を無効化する有効な手段にもなります。
 
 Even if the caller does not maintain a reference to the `Signal`:
 
