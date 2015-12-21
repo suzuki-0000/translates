@@ -5,8 +5,8 @@
 ここで説明するオペレータはSignalおよびSignalProducerを変換する機能です。Swiftのカスタムオペレータではありません。
 すなわち、これらはReactiveCocoaがイベントストリームを提供するために内包されたオペレータです。
 
-ここではSignal,SignalProduerともに、同じ「イベントストリーム」として扱います。
-もし区別が必要な場合はタイプは名前によって区別されます。
+ここではSignal/SignalProducerともに、同じ「イベントストリーム」として扱います。
+もし区別が必要な場合、名前によって区別します。
 
 **[イベントストリームの効用について](#イベントストリームの効用について)**
 
@@ -62,7 +62,7 @@ signal.observe(Signal.Observer { event in
 })
 ```
 
-あるいは、 ` Next`、` ERROR`、Completed`、` Interrupted`イベントが、イベントが応答したときに受け取ることもできます。
+あるいは、 ` Next`、` ERROR`、`Completed`、` Interrupted`イベントが、イベントが応答したときに受け取ることもできます。
 
 ```Swift
 signal.observeNext { next in 
@@ -120,7 +120,7 @@ Producerをスタートさせないと、なにもプリントされないので
 
 ## イベントストリームの変換
 
-これらのオペレータは、新しいストリームにイベントストリームを変換します。 
+これから説明するオペレータは、イベントストリームを新しいストリームに変換します。 
 
 ### Mapping
 
@@ -261,9 +261,9 @@ lettersObserver.sendNext("C")    // prints (2, C) & "Completed"
 ## Producerの平坦化
 
 `flatten`は、SignalProducerとSignalProducerを一つのSignalProducerへと変換します。
-その値は'FlattenSterategy'にしたがって提供されます。
+その値は`FlattenSterategy`にしたがって提供されます。
 
-なぜそれぞれのsterategyが存在するかは、以下のサンプルを参考にすることで、時間などの列オフセットを想像してみてください。
+どのようなsterategyが存在するかは、以下のサンプルを参考にすることで、時間などの列オフセットを想像してみてください。
 
 ```Swift
 let values = [
@@ -370,7 +370,7 @@ observerC.sendNext("Z")        // prints "Z"
 
 ## Handling errors
 
-これから説明する演算子はエラーがイベントストリーム内で発生したさいに使用するものです。
+これから説明する演算子はエラーがイベントストリーム内で発生した際に使用するものです。
 
 ### Catching errors
 
