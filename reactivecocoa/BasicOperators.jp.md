@@ -28,7 +28,7 @@
   1. [Combining latest values](#combining-latest-values)
   1. [Zipping](#zipping)
 
-**[Producerの平坦化](#Producerの平坦化)**
+**[Producerの平坦化](#producerの平坦化)**
 
   1. [Concatenating](#concatenating)
   1. [Merging](#merging)
