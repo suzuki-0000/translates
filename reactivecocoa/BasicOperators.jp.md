@@ -200,7 +200,7 @@ observer.sendCompleted()   // prints [1, 2, 3]
 
 複数のイベントストリームを結合し、１つのストリームにします。
 
-### 最新の値の結合
+### Combining latest values
 
 `combineLatest`は、2つ（またはそれ以上）のイベントストリームの最新の値を組み合わせます。
 
