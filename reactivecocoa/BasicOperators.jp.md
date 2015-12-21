@@ -13,12 +13,11 @@
   1. [Observation](#observation)
   1. [Injecting effects](#injecting-effects)
 
-**[オペレータの構造](#operator-composition)**
+**[オペレータの構造](#オペレータの構造)**
 
   1. [Lifting](#lifting)
-  1. [Pipe](#pipe)
 
-**[イベントストリームの変換](#transforming-event-streams)**
+**[イベントストリームの変換](#イベントストリームの変換)**
 
   1. [Mapping](#mapping)
   1. [Filtering](#filtering)
@@ -29,7 +28,7 @@
   1. [Combining latest values](#combining-latest-values)
   1. [Zipping](#zipping)
 
-**[Producerの平坦化](#flattening-producers)**
+**[Producerの平坦化](#Producerの平坦化)**
 
   1. [Concatenating](#concatenating)
   1. [Merging](#merging)
@@ -111,14 +110,15 @@ let producer = signalProducer
 `observe`と似ていて、全てはオプショナルです。好きなモノを使ってください。
 Producerをスタートさせないと、なにもプリントされないので気をつけてくださいね。
 
-## Operator composition
+## オペレータの構造
 
 ### Lifting
 
 `Signal`演算子は`lift`メソッドを使うことで`SignalProducer`上に働きかけることができます。
 `lift`を与えられたそれぞれのSignalは新たにSignalProducerを生成します。 
 
-## Transforming event streams
+
+## イベントストリームの変換
 
 これらのオペレータは、新しいストリームにイベントストリームを変換します。 
 
@@ -257,7 +257,8 @@ lettersObserver.sendNext("C")    // prints (2, C) & "Completed"
 `zipWith`はオペレータであることを除いて同じように動作します。
 [`zip`よくわかる図式](http://neilpa.me/rac-marbles/#zip)
 
-## Flattening producers
+
+## Producerの平坦化
 
 `flatten`は、SignalProducerとSignalProducerを一つのSignalProducerへと変換します。
 その値は'FlattenSterategy'にしたがって提供されます。
@@ -282,7 +283,7 @@ let latest =
 [ 1, 4,    7,     8 ]
 ```
 
-どのように値がインターリーブしているか、また、どのよう値が結果の配列に含まれているか、注意してみてください。
+どのように値がインターリーブしているか、また、どのような値が結果の配列に含まれているか、注意してみてください。
 
 ### Merging
 
