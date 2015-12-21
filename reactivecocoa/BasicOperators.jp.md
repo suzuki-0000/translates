@@ -42,7 +42,7 @@
 
 ## イベントストリームの効用について
 
-### 監視(Observetion)
+### Observation
 
 `Signal`は`Observe` functionを用いて監視することができます。
 Signalはどのようなイベントが送信された場合でも`Observer`を引数として受け取ることができます。
@@ -84,7 +84,7 @@ signal.observeInterrupted {
 
 ### Injecting effects
 
-作用は、`SignalProducer`として注入できます。オペレータは`on`を使うことでイベントストリームの生成を行います。
+`SignalProducer`として注入できます。オペレータは`on`を使うことでイベントストリームの生成を行います。
 
 ```Swift
 let producer = signalProducer
@@ -159,7 +159,7 @@ observer.sendNext(4)     // prints 4
 
 [filterのよくわかる図式](http://neilpa.me/rac-marbles/#filter)
 
-### Aggregating（集計）
+### Aggregating
 
 `reduce`はイベントストリーム内の値を集計し、１つの値とします。
 変換した、最後の値のみが送信されることに注意してください
@@ -346,7 +346,6 @@ numbersObserver.sendCompleted()
 
 `Latest`は最新のinputのみを送信するためのものです。
 
-
 ```Swift
 let (producerA, observerA) = SignalProducer<String, NoError>.buffer(5)
 let (producerB, observerB) = SignalProducer<String, NoError>.buffer(5)
@@ -431,9 +430,6 @@ producer
 もし`SignalProducer`が必要なretry分で成功しなかった場合、failします。
 例えば上記の場合、`retry(1)`を使った場合、`"Success"`の代わりに`"Signal Failure"`が出力されます。
 
-If the `SignalProducer` does not succeed after `count` tries, the resulting `SignalProducer` will fail. E.g., if  `retry(1)` is used in the example above instead of `retry(2)`, `"Signal Failure"` will be printed instead of `"Success"`.
-
-
 ### Mapping errors
 
 `mapError`はストリーム内で発生した何かしらのエラーを新しいエラーへと変換します。
@@ -476,8 +472,6 @@ observer.sendFailed(NSError(domain: "com.example.foo", code: 42, userInfo: nil))
 ### Promote
 
 `promoteErrors`はイベントストリームがエラーを生成できないものを一つのエラーへと昇格させます。
-
-The `promoteErrors` operator promotes an event stream that does not generate errors into one that can. 
 
 ```Swift
 let (numbersSignal, numbersObserver) = Signal<Int, NoError>.pipe()
