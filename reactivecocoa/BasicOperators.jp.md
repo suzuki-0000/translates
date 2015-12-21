@@ -23,7 +23,7 @@
   1. [Filtering](#filtering)
   1. [Aggregating](#aggregating)
 
-**[イベントストリームの結合](#combining-event-streams)**
+**[イベントストリームの結合](#イベントストリームの結合)**
 
   1. [Combining latest values](#combining-latest-values)
   1. [Zipping](#zipping)
