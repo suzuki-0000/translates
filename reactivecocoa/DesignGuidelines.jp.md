@@ -394,7 +394,7 @@ event sent to that specific observer.
 これは長時間作業することを割り当てられたSignalが、途中で解放されないことを保証するためです。
 
 注意してほしいのは、SignalはTerminatingイベントが送信される前に解放可能であるということです。
-これは通常リークを引き起こすため避けられるべきですが、時には中断を無効化する有効な手段にもなります。
+これは通常メモリーリークを引き起こすため避けられるべきですが、時には中断を無効化する有効な手段にもなります。
 
 Even if the caller does not maintain a reference to the `Signal`:
 
@@ -413,6 +413,11 @@ leaks, but is sometimes useful to disable termination.
 #### Terminating events dispose of signal resources
 #### Eventを切断することでSignalのリソースを廃棄する
 
+TerminatingイベントがSignalを通して送られた時、すべてのObserverはリリースされ、
+処分されるべきイベント郡を処理するために生成されています。
+
+適切なクリーンアップを確実にする最も簡単な方法は、Terminationが発生した時に処理されるDisposableを生成されたClosureから取得することです。
+Disposableはメモリのリリース、I/Oのハンドリング、ネットワーク通信キャンセルのハンドリング、その他、なにかしらの実行されている処理への責任を持っています。
 
 When a terminating [event][Events] is sent along a `Signal`, all [observers][] will be
 released, and any resources being used to generate events should be disposed of.
@@ -424,6 +429,7 @@ canceling network requests, or anything else that may have been associated with
 the work being performed.
 
 ## The `SignalProducer` contract
+
 
 A [signal producer][Signal Producers] is like a “recipe” for creating
 [signals][]. Signal producers do not do anything by themselves—[work begins only
