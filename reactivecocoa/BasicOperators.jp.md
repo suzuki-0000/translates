@@ -34,7 +34,7 @@
   1. [Merging](#merging)
   1. [Switching to the latest](#switching-to-the-latest)
 
-**[Handling errors](#handling-errors)**
+**[エラーハンドリング](#エラーハンドリング)**
 
   1. [Catching errors](#catch)
   1. [Mapping errors](#mapping-error)
@@ -368,7 +368,7 @@ observerB.sendNext("3")        // nothing printed
 observerC.sendNext("Z")        // prints "Z"
 ```
 
-## Handling errors
+## エラーハンドリング
 
 これから説明する演算子はエラーがイベントストリーム内で発生した際に使用するものです。
 
