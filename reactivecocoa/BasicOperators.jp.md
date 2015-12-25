@@ -227,7 +227,7 @@ lettersObserver.sendCompleted()  // prints "Completed"
 
 `combineLatestWith`はオペレータであることを除いて同じように動作します。
 
-[`combineLatest`よくわかる図式](http://neilpa.me/rac-marbles/#combineLatest)
+[combineLatestのよくわかる図式](http://neilpa.me/rac-marbles/#combineLatest)
 
 ### Zipping
 
@@ -255,7 +255,7 @@ lettersObserver.sendNext("C")    // prints (2, C) & "Completed"
 ```
 
 `zipWith`はオペレータであることを除いて同じように動作します。
-[`zip`よくわかる図式](http://neilpa.me/rac-marbles/#zip)
+[zipのよくわかる図式](http://neilpa.me/rac-marbles/#zip)
 
 
 ## Producerの平坦化
@@ -309,8 +309,7 @@ lettersObserver.sendNext("c")    // prints "c"
 numbersObserver.sendNext("3")    // prints "3"
 ```
 
-
-[`merge`のよくわかる図式](http://neilpa.me/rac-marbles/#merge)
+[mergeのよくわかる図式](http://neilpa.me/rac-marbles/#merge)
 
 ### Concatenating
 
@@ -340,7 +339,7 @@ numbersObserver.sendNext("3")    // prints "3"
 numbersObserver.sendCompleted()
 ```
 
-[`Concat`のよくわかる図式](http://neilpa.me/rac-marbles/#concat)
+[Concatのよくわかる図式](http://neilpa.me/rac-marbles/#concat)
 
 ### Switching to the latest
 
