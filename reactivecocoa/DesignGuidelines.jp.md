@@ -429,7 +429,13 @@ canceling network requests, or anything else that may have been associated with
 the work being performed.
 
 ## The `SignalProducer` contract
+## SignalProducerについて
 
+SignalProducerはいわばSignalを生成する「レシピ」のようなものです。
+SignalProducerは彼らそのものは何もせず、SignalがProduceされたタイミングでのみ作用します。
+
+なので、SignalProducerはどのようにSignalを生成するかを宣言するだけです。
+それはValueTypeであり、メモリー管理の機能を持ちません。
 
 A [signal producer][Signal Producers] is like a “recipe” for creating
 [signals][]. Signal producers do not do anything by themselves—[work begins only
@@ -439,6 +445,14 @@ Since a signal producer is just a declaration of _how_ to create signals, it is
 a value type, and has no memory management to speak of.
 
 #### Signal producers start work on demand by creating signals
+#### SignalProducerはSignalの作成によってstartする
+
+`start`, `startWithSignal`メソッドでSignalをProduceします（明示的に、そして暗黙的に、それぞれ）
+Signalが生成された後、SignalProducerのinitによって渡されたclosureが実行されます。
+それはeventsの流れであり、いずれかのObserverにアタッチされた後です。
+
+
+
 
 The [`start`][start] and [`startWithSignal`][startWithSignal] methods each
 produce a `Signal` (implicitly and explicitly, respectively). After
@@ -455,6 +469,10 @@ A producer can be started any number of times (including zero), and the work
 associated with it will execute exactly that many times as well.
 
 #### Each produced signal may send different events at different times
+ 1. [produceされたSignalはそれぞれ異なるタイミングで異なるeventを送信しうる]
+ 1. [Signal演算子によりSignalProducerを操作しうる]
+ 1. [DisposeしたproduceされたSignalは中断される]
+
 
 Because signal producers [start work on
 demand](#signal-producers-start-work-on-demand-by-creating-signals), there may
