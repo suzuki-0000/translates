@@ -451,8 +451,12 @@ a value type, and has no memory management to speak of.
 Signalが生成された後、SignalProducerのinitによって渡されたclosureが実行されます。
 それはeventsの流れであり、いずれかのObserverにアタッチされた後です。
 
+Producer自体は、処理のための責任を担いませんが、
+"starting"と"canceling"はProducerとの対話で一般的です。
+これらの要素はSignalを実際に動作させるために使用し、またSignalを破棄するために使用します。
 
-
+Producerはゼロを含む任意の数をスタートすることができます
+また、それに関連する処理は正確に同じ数だけ実行されます。
 
 The [`start`][start] and [`startWithSignal`][startWithSignal] methods each
 produce a `Signal` (implicitly and explicitly, respectively). After
@@ -460,19 +464,25 @@ instantiating the signal, the closure that was passed to
 [`SignalProducer.init`][SignalProducer.init] will be executed, to start the flow
 of [events][] after any observers have been attached.
 
-Although the producer itself is not _really_ responsible for the execution of
+Although the producer itself is not really responsible for the execution of
 work, it’s common to speak of “starting” and “canceling” a producer. These terms
-refer to producing a `Signal` that will start work, and [disposing of that
-signal](#disposing-of-a-produced-signal-will-interrupt-it) to stop work.
+refer to producing a `Signal` that will start work, and disposing of that
+signal to stop work.
 
 A producer can be started any number of times (including zero), and the work
 associated with it will execute exactly that many times as well.
 
 #### Each produced signal may send different events at different times
- 1. [produceされたSignalはそれぞれ異なるタイミングで異なるeventを送信しうる]
- 1. [Signal演算子によりSignalProducerを操作しうる]
- 1. [DisposeしたproduceされたSignalは中断される]
+#### produceされたSignalはそれぞれ異なるタイミングで異なるeventを送信しうる
 
+SignalProducerは生成されたSignalによってオンデマンドで処理されるため、
+紐付けられたObserverによって実行する処理は異なるで可能性があり、
+それらのObserverはそれぞれ完全に違ったEventsのタイムラインを見ることになります。
+
+言いかえると、EventsはProducerがスタートするたびに再び生成され、
+それは他の時系列からProducerがスタートすることで完全に異なるものでありうるということです
+
+にもかかわらず、それぞれのSignalProducerはEventsの条件に従います。
 
 Because signal producers [start work on
 demand](#signal-producers-start-work-on-demand-by-creating-signals), there may
@@ -488,6 +498,8 @@ contract](#the-event-contract).
 
 #### Signal operators can be lifted to apply to signal producers
 
+ 1. [Signal演算子によりSignalProducerを操作しうる]
+
 Due to the relationship between signals and signal producers, it is possible to
 automatically promote any [operators][] over one or more `Signal`s to apply to
 the same number of `SignalProducer`s instead, using the [`lift`][lift] method.
@@ -496,6 +508,8 @@ the same number of `SignalProducer`s instead, using the [`lift`][lift] method.
 is [created when the signal produced is started](#signal-producers-start-work-on-demand-by-creating-signals).
 
 #### Disposing of a produced signal will interrupt it
+ 1. [DisposeしたproduceされたSignalは中断される]
+
 
 When a producer is started using the [`start`][start] or
 [`startWithSignal`][startWithSignal] methods, a [`Disposable`][Disposables] is
