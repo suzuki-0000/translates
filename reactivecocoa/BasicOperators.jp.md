@@ -79,8 +79,8 @@ signal.observeInterrupted {
 }
 ```
 
-すべてはオプショナルであるため、４つのパラメータをすべてを提供する必要はないです。
-好きなモノを使えば良いのです。
+すべてはオプショナルであるため、４つのパラメータをすべてを提供する必要はありません。
+必要なものだけを使えばよいのです。
 
 ### Injecting effects
 
@@ -107,7 +107,7 @@ let producer = signalProducer
     })
 ```
 
-`observe`と似ていて、全てはオプショナルです。好きなモノを使ってください。
+`observe`と似ていて、全てはオプショナルです。必要なものだけ使ってください。
 Producerをスタートさせないと、なにもプリントされないので気をつけてくださいね。
 
 ## オペレータの構造
@@ -205,7 +205,7 @@ observer.sendCompleted()   // prints [1, 2, 3]
 `combineLatest`は、2つ（またはそれ以上）のイベントストリームの最新の値を組み合わせます。
 
 各入力で送信された後、得られた最新のストリームのみが値を送信します。
-その後、なにか入力があるたびにそれが新しい値がになります。
+その後、なにか入力があるたびにそれが新しい値になります。
 
 ```Swift
 let (numbersSignal, numbersObserver) = Signal<Int, NoError>.pipe()
@@ -234,7 +234,7 @@ lettersObserver.sendCompleted()  // prints "Completed"
 `zip`は、2つ（またはそれ以上）の値を結合します。
 それぞれN番目のタプルの要素は、入力ストリームのN番目の要素に対応します。
 
-すなわち、出力ストリームのN番目の値がそれぞれ入力されるまで送信できないことを意味します。
+すなわち、出力ストリームのN番目の値がそれぞれ入力されるまで送信できない（しない）ことを意味します。
 
 ```Swift
 let (numbersSignal, numbersObserver) = Signal<Int, NoError>.pipe()
@@ -315,7 +315,7 @@ numbersObserver.sendNext("3")    // prints "3"
 
 `Concat`はinner`SignalProducer`の直列化をサポートします。outer`SignalProducer`はすぐにスタートします。
 それぞれのproducerは、現在処理されているproducerがcompleteするまでスタートしません。
-エラーはすぐにflattenされたproducerへと送信されます。
+エラーの場合、すぐにflattenされたproducerへと送信されます。
 
 
 ```Swift
@@ -424,7 +424,6 @@ producer
         }
     }
 ```
-
 
 もし`SignalProducer`が必要なretry分で成功しなかった場合、failします。
 例えば上記の場合、`retry(1)`を使った場合、`"Success"`の代わりに`"Signal Failure"`が出力されます。
