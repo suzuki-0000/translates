@@ -267,7 +267,6 @@ RACが複数のイベントを同時に受け取ることを保証しないよ�
 再帰的な信号が望ましい場合、delay演算子などでタイムシフトされるべきで、
 それはイベントがすでに実行中でないことを保証する必要があります。
 
-
 Just like RAC guarantees that [events will not be received
 concurrently](#events-are-serial), it also guarantees that they won’t be
 received recursively. As a consequence, [operators][] and [observers][] _do not_ need to
@@ -497,8 +496,13 @@ Nonetheless, each execution of a signal producer will follow [the `Event`
 contract](#the-event-contract).
 
 #### Signal operators can be lifted to apply to signal producers
+#### Signal演算子によりSignalProducerを操作しうる
 
- 1. [Signal演算子によりSignalProducerを操作しうる]
+SignalとSignalProducerの関係により、いかなる演算子（１つでも複数でも）も、
+liftメソッドを用いることで自動的にSignalからSignalProducerへと変換することができます。
+
+`lift`は適用されます、振るまいを　指定された演算子それぞれのSignalへと　それはSignalProducerがスタートした時に
+
 
 Due to the relationship between signals and signal producers, it is possible to
 automatically promote any [operators][] over one or more `Signal`s to apply to
@@ -508,8 +512,17 @@ the same number of `SignalProducer`s instead, using the [`lift`][lift] method.
 is [created when the signal produced is started](#signal-producers-start-work-on-demand-by-creating-signals).
 
 #### Disposing of a produced signal will interrupt it
- 1. [DisposeしたproduceされたSignalは中断される]
+#### DisposeしたproduceされたSignalは中断される
 
+SignalProducerが`start`,`startWithSignal`でスタートした時、`Disposable`が自動的に生成され、
+返却されます。
+
+DisposableオブジェクトはSignalを中断するために生成され、
+現在実行中の処理を停止し、`Interruputed`イベントをすべてのObserverへ送信します。
+また、同時にすべてのCompositeDisposableに含まれる処理を破棄します。
+
+Signalの破棄によって、同じSignalProducerで生成された他のSignalに影響を与えないことに
+注意してください。
 
 When a producer is started using the [`start`][start] or
 [`startWithSignal`][startWithSignal] methods, a [`Disposable`][Disposables] is
@@ -526,6 +539,13 @@ Note that disposing of one produced `Signal` will not affect other signals creat
 by the same `SignalProducer`.
 
 ## Best practices
+## ベスト・プラクティス
+
+これから記述するプラクティスは、RACのコードを宣言的に、理解しやすく、同時にパフォーマンスに優れた状態を保つために記載されています。
+
+しかし、これは１つのガイドラインでしかありません。
+それぞれのどのような箇所に、どのようなコードを適用するかは、適切な判断をしてください。
+
 
 The following recommendations are intended to help keep RAC-based code
 predictable, understandable, and performant.
@@ -534,6 +554,15 @@ They are, however, only guidelines. Use best judgement when determining whether
 to apply the recommendations here to a given piece of code.
 
 #### Process only as many values as needed
+#### Processは必要な数だけ
+
+使われない処理に対して、
+必要以上にイベントストリームを保持することはCPUとメモリーの無駄遣いです。
+
+もしSignal、SignalProducerから取得する数が、正確に決まっている場合は
+`take`,`takeUntil`などを使って、自動的に必要な条件を満たした場合にcompleteするようにするべきです。
+
+これを実行することで潜在的にかなりの演算処理を省くことができます。
 
 Keeping an event stream alive longer than necessary can waste CPU and memory, as
 unnecessary work is performed for results that will never be used.
@@ -543,10 +572,14 @@ a [signal][Signals] or [producer][Signal Producers], operators like
 [`take`][take] or [`takeUntil`][takeUntil] can be used to
 automatically complete the stream once a certain condition is fulfilled.
 
+
 The benefit is exponential, too, as this will terminate dependent operators
 sooner, potentially saving a significant amount of work.
 
 #### Observe events on a known scheduler
+#### scheduler上でEventをObserveする
+
+
 
 When receiving a [signal][Signals] or [producer][Signal Producers] from unknown
 code, it can be difficult to know which thread [events][] will arrive upon. Although
@@ -559,6 +592,8 @@ Whenever such a guarantee is important, the [`observeOn`][observeOn]
 a specific [scheduler][Schedulers].
 
 #### Switch schedulers in as few places as possible
+ 1. [schedulerのスイッチは可能な限り少ない箇所で]
+
 
 Notwithstanding the [above](#observe-events-on-a-known-scheduler), [events][]
 should only be delivered to a specific [scheduler][Schedulers] when absolutely
@@ -571,6 +606,7 @@ a [property][Properties]. This ensures that events arrive on the expected
 scheduler, without introducing multiple thread hops before their arrival.
 
 #### Capture side effects within signal producers
+ 1. [SignalProducer内で副作用を処理する]
 
 Because [signal producers start work on
 demand](#signal-producers-start-work-on-demand-by-creating-signals), any
@@ -591,6 +627,8 @@ that it is started. This also means that if the producer is never started,
 a search will never have to be performed either.
 
 #### Share the side effects of a signal producer by sharing one produced signal
+ 1. [SignalProduerの副作用は、一つのproduceされたSignalで行わせる]
+
 
 If multiple [observers][] are interested in the results of a [signal
 producer][Signal Producers], calling [`start`][start] once for each observer
@@ -609,6 +647,8 @@ results of that one [signal][Signals] to all observers, by attaching them within
 the closure passed to the [`startWithSignal`][startWithSignal] method.
 
 #### Prefer managing lifetime with operators over explicit disposal
+ 1. [ライフサイクルの管理は、明示的なdisposal演算子を用いる]
+
 
 Although the [disposable][Disposables] returned from [`start`][start] makes
 canceling a [signal producer][Signal Producers] really easy, explicit use of
