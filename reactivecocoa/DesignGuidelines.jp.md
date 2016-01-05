@@ -4,18 +4,10 @@
 このドキュメントは[Rx Design
 Guidelines](http://blogs.msdn.com/b/rxteam/archive/2010/10/28/rx-design-guidelines.aspx)に強く影響を受けています。
 
-This document contains guidelines for projects that want to make use of
-ReactiveCocoa. The content here is heavily inspired by the [Rx Design
-Guidelines](http://blogs.msdn.com/b/rxteam/archive/2010/10/28/rx-design-guidelines.aspx).
-
 このドキュメントでは、RACの基本的な知識があることを前提とします。
 `Framework Overview.md`が基本的なRACが提供するコンセプトを理解するのを助けるでしょう。
 
-This document assumes basic familiarity
-with the features of ReactiveCocoa. The [Framework Overview][] is a better
-resource for getting up to speed on the main types and concepts provided by RAC.
-
-**[`Event`について]
+**[Eventについて](#eventについて)**
 
  1. [Nextは値を提供したり、イベントの発生を示す]
  1. [Failuresは例外のように動作し、即座に送信する]
@@ -25,42 +17,20 @@ resource for getting up to speed on the main types and concepts provided by RAC.
  1. [Eventは再帰的に送信することはできない] 
  1. [Eventはデフォルトでは同期的に送信される]
 
-**[The `Event` contract](#the-event-contract)**
-
- 1. [`Next`s provide values or indicate the occurrence of events](#nexts-provide-values-or-indicate-the-occurrence-of-events)
- 1. [Failures behave like exceptions and propagate immediately](#failures-behave-like-exceptions-and-propagate-immediately)
- 1. [Completion indicates success](#completion-indicates-success)
- 1. [Interruption cancels outstanding work and usually propagates immediately](#interruption-cancels-outstanding-work-and-usually-propagates-immediately)
- 1. [Events are serial](#events-are-serial)
- 1. [Events cannot be sent recursively](#events-cannot-be-sent-recursively)
- 1. [Events are sent synchronously by default](#events-are-sent-synchronously-by-default)
-
-
-**[The `Signal` contract](#the-signal-contract)**
+**[Signalについて](#signalについて)**
 
  1. [Signalは、startされて初めてインスタンスを生成]
- 1. [SignalはObervingすることでの副作用はない]
- 1. [SignalのすべてのObserverは同じイベントを同じ順序]
+ 1. [SignalはObservingすることでの副作用はない]
+ 1. [SignalのすべてのObserverは同じイベントを同じ順序でこなす]
  1. [SignalはObserverがリリースされるまで保持される]
  1. [Eventを切断することでSignalのリソースを廃棄する]
- 
- 1. [Signals start work when instantiated](#signals-start-work-when-instantiated)
- 1. [Observing a signal does not have side effects](#observing-a-signal-does-not-have-side-effects)
- 1. [All observers of a signal see the same events in the same order](#all-observers-of-a-signal-see-the-same-events-in-the-same-order)
- 1. [A signal is retained until the underlying observer is released](#a-signal-is-retained-until-the-underlying-observer-is-released)
- 1. [Terminating events dispose of signal resources](#terminating-events-dispose-of-signal-resources)
 
 **[The `SignalProducer` contract](#the-signalproducer-contract)**
 
  1. [SignalProducerはSignalの作成によってstartする]
  1. [produceされたSignalはそれぞれ異なるタイミングで異なるeventを送信しうる]
- 1. [Signal演算子によりSignalProducerを操作しうる]
- 1. [DisposeしたproduceされたSignalは中断される]
-
- 1. [Signal producers start work on demand by creating signals](#signal-producers-start-work-on-demand-by-creating-signals)
- 1. [Each produced signal may send different events at different times](#each-produced-signal-may-send-different-events-at-different-times)
- 1. [Signal operators can be lifted to apply to signal producers](#signal-operators-can-be-lifted-to-apply-to-signal-producers)
- 1. [Disposing of a produced signal will interrupt it](#disposing-of-a-produced-signal-will-interrupt-it)
+ 1. [Signal演算子によりSignalProducerに適用する]
+ 1. [破棄されたSignalは中断される]
 
 **[Best practices](#best-practices)**
 
@@ -340,7 +310,7 @@ since it is impossible for any [observers][] to be attached at this point, any
 events sent this way cannot be received.
 
 #### Observing a signal does not have side effects
-#### SignalはObervingすることでの副作用はない
+#### SignalはObservingすることでの副作用はない
 
 処理を紐付けられたシグナルは、Observerが追加されても削除されても、開始、または停止することはありません。
 なのでObserveメソッドは副作用を持ちえません。
@@ -512,7 +482,7 @@ the same number of `SignalProducer`s instead, using the [`lift`][lift] method.
 is [created when the signal produced is started](#signal-producers-start-work-on-demand-by-creating-signals).
 
 #### Disposing of a produced signal will interrupt it
-#### DisposeしたproduceされたSignalは中断される
+#### 破棄されたSignalは中断される
 
 SignalProducerが`start`,`startWithSignal`でスタートした時、`Disposable`が自動的に生成され、
 返却されます。
