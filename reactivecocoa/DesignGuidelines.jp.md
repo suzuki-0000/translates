@@ -9,30 +9,30 @@ Guidelines](http://blogs.msdn.com/b/rxteam/archive/2010/10/28/rx-design-guidelin
 
 **[Eventについて](#eventについて)**
 
- 1. [Nextは値を提供したり、イベントの発生を示す]
- 1. [Failuresは例外のように動作し、即座に送信する]
- 1. [Completionは成功を示す]
- 1. [Interruptは、処理をキャンセルし、通常はすぐ送信する]
- 1. [EventはSerialである]
- 1. [Eventは再帰的に送信することはできない] 
- 1. [Eventはデフォルトでは同期的に送信される]
+ 1. Nextは値を提供したり、イベントの発生を示す
+ 1. Failuresは例外のように動作し、即座に送信する
+ 1. Completionは成功を示す
+ 1. Interruptは、処理をキャンセルし、通常はすぐ送信する
+ 1. EventはSerialである
+ 1. Eventは再帰的に送信することはできない]
+ 1. Eventはデフォルトでは同期的に送信される
 
 **[Signalについて](#signalについて)**
 
- 1. [Signalは、startされて初めてインスタンスを生成]
- 1. [SignalはObservingすることでの副作用はない]
- 1. [SignalのすべてのObserverは同じイベントを同じ順序でこなす]
- 1. [SignalはObserverがリリースされるまで保持される]
- 1. [Eventを切断することでSignalのリソースを廃棄する]
+ 1. Signalは、startされて初めてインスタンスを生成
+ 1. SignalはObservingすることでの副作用はない
+ 1. SignalのすべてのObserverは同じイベントを同じ順序でこなす
+ 1. SignalはObserverがリリースされるまで保持される
+ 1. Eventを切断することでSignalのリソースを廃棄する
 
-**[The `SignalProducer` contract](#the-signalproducer-contract)**
+**[SignalProducerについて](#signalProducerについて)**
 
- 1. [SignalProducerはSignalの作成によってstartする]
- 1. [produceされたSignalはそれぞれ異なるタイミングで異なるeventを送信しうる]
- 1. [Signal演算子によりSignalProducerに適用する]
- 1. [破棄されたSignalは中断される]
+ 1. SignalProducerはSignalの作成によってstartする
+ 1. produceされたSignalはそれぞれ異なるタイミングで異なるeventを送信しうる
+ 1. Signal演算子によりSignalProducerに適用する
+ 1. 破棄されたSignalは中断される
 
-**[Best practices](#best-practices)**
+**[ベストプラクティス](#ベストプラクティス)**
 
  1. [Processは必要な数だけ]
  1. [scheduler上でEventをObserveする]
@@ -40,40 +40,21 @@ Guidelines](http://blogs.msdn.com/b/rxteam/archive/2010/10/28/rx-design-guidelin
  1. [SignalProducer内で副作用を処理する]
  1. [SignalProduerの副作用は、一つのproduceされたSignalで行わせる]
  1. [ライフサイクルの管理は、明示的なdisposal演算子を用いる]
- 
- 1. [Process only as many values as needed](#process-only-as-many-values-as-needed)
- 1. [Observe events on a known scheduler](#observe-events-on-a-known-scheduler)
- 1. [Switch schedulers in as few places as possible](#switch-schedulers-in-as-few-places-as-possible)
- 1. [Capture side effects within signal producers](#capture-side-effects-within-signal-producers)
- 1. [Share the side effects of a signal producer by sharing one produced signal](#share-the-side-effects-of-a-signal-producer-by-sharing-one-produced-signal)
- 1. [Prefer managing lifetime with operators over explicit disposal](#prefer-managing-lifetime-with-operators-over-explicit-disposal)
 
-**[Implementing new operators](#implementing-new-operators)**
+**[新しい演算子を実装する](#新しい演算子を実装する)**
 
- 1. [Signal/SignalProducerに適用させる演算子の記述に備える]
- 1. [可能であれば存在する演算子で構成する]
- 1. [可能な限り早くFailure/InterruptionのEventへと進める]
- 1. [Eventの値でスイッチする]
- 1. [並列性は避ける]
- 1. [演算子内でブロッキング処理は避ける]
-
- 1. [Prefer writing operators that apply to both signals and producers](#prefer-writing-operators-that-apply-to-both-signals-and-producers)
- 1. [Compose existing operators when possible](#compose-existing-operators-when-possible)
- 1. [Forward failure and interruption events as soon as possible](#forward-failure-and-interruption-events-as-soon-as-possible)
- 1. [Switch over `Event` values](#switch-over-event-values)
- 1. [Avoid introducing concurrency](#avoid-introducing-concurrency)
- 1. [Avoid blocking in operators](#avoid-blocking-in-operators)
+ 1. Signal/SignalProducerともに適用できる演算子が好ましい
+ 1. 可能であれば存在する演算子で構成する
+ 1. 可能な限り早くFailure/Interruptionを発生させる
+ 1. Eventの値でスイッチする
+ 1. 並列性は避ける
+ 1. 演算子内でブロッキング処理は避ける
 
 
 ## `Event`について
 
-EventはReactiveCocoaにとってコアといえます。
+EventはReactiveCocoaにとって根幹をなすものといえます。
 Signal/SignalProducerがEventを送信し、それは"イベントストリーム"と称することができます。
-
-## The `Event` contract
-
-[Events][] are fundamental to ReactiveCocoa. [Signals][] and [signal producers][] both send
-events, and may be collectively called “event streams.”
 
 イベントストリームは以下の文法でなければいけません。
 
@@ -81,55 +62,28 @@ events, and may be collectively called “event streams.”
 Next* (Interrupted | Failed | Completed)?
 ```
 
-このイベントストリームは以下の要素から構成されます。
+イベントストリームは以下の要素から構成されます。
 
  1. いくつかの`Next`イベント
- 2. Optionalの中断イベント、`Interrupted`、`Failed`、`Completed`
+ 2. Optionalのいくつかの中断イベント、`Interrupted`、`Failed`、`Completed`
 
-イベントが中断されたあとは、もうイベントをうけとることはありません。
-
-
-Event streams must conform to the following grammar:
-
-```
-Next* (Interrupted | Failed | Completed)?
-```
-
-This states that an event stream consists of:
-
- 1. Any number of `Next` events
- 1. Optionally followed by one terminating event, which is any of `Interrupted`, `Failed`, or `Completed`
-
-After a terminating event, no other events will be received.
-
+これらいくつかの中断イベントの後は、イベントは送信されません。
 
 #### `Next`は値を提供したり、イベントの発生を示す
-#### `Next`s provide values or indicate the occurrence of events
 
 `Next`は"Value"と言われる値を持っています。
 `Next`イベントだけが、値を持っているという言い方ができます。
 ゆえに、イベントストリームはいくつかの`Next`を含み、
-それぞれのタイプが同じであることを除いて、いくつかの制限が存在します。
+これらのValueはすべて同じタイプでなければいけません。
+また、その使用方法にはいくつかの制限が存在します。
 
-`Next` events contain a payload known as the “value.” Only `Next` events are
-said to have a value. Since an event stream can contain any number of `Next`s,
-there are few restrictions on what those values can mean or be used for, except
-that they must be of the same type.
+例えば、"Value"はコレクションからの要素であるかもしれないし、
+いくつかの長時間実行操作に関するものかもしれません。
 
-例えば、"Value"はコレクションから要素を表したり、いくつかの長時間実行操作に関するものかもしれません。
- `Next`イベントのValueは何も表現しないこともあるかもしれません。
-それは`()`として使うことができ、具体的になにかがおこったというよりも、なにかが起こったということを示すためにあります。
-
-As an example, the value might represent an element from a collection, or
-a progress update about some long-running operation. The value of a `Next` event
-might even represent nothing at all—for example, it’s common to use a value type
-of `()` to indicate that something happened, without being more specific about
-what that something was.
+また、 `Next`イベントのValueは何も表現しないこともあるかもしれません。
+それは`()`として扱うことができ、具体的になにかが発生した、というよりも、「なにかが起こった」ということを示すためにあります。
 
 ほとんどのイベント上のストリームは`Next`上で動作し、Signal/SignalProduerによって、意味のあるデータとして表現されます。
-
-Most of the event stream [operators][] act upon `Next` events, as they represent the
-“meaningful data” of a signal or producer.
 
 #### Failures behave like exceptions and propagate immediately
 #### Failuresは例外のように動作し、即座に送信する
