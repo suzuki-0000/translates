@@ -103,18 +103,12 @@ Next* (Interrupted | Failed | Completed)?
 
 #### Completionは成功を示す
 
-操作が成功した場合か、正常に中断された場合、イベントストリームは`Completed`を送信します。
+操作が成功した場合、もしくは正常に中断された場合、イベントストリームは`Completed`を送信します。
 多くの演算子が`Completed`を操作し、そのイベントストリーム上の寿命を短縮したり延長したりします。
 例えば、`take`はいくつかのvalueを受け取ったあとにcompleteとします。
 言い方を変えると、signalかproducerが受け入れるほとんどの演算子は、`Completed`イベントを送信する前のイベントがすべて完了するまで待ちます。結果は通常、すべての入力に依存します。
 
-
-An event stream sends `Completed` when the operation has completed successfully,
-or to indicate that the stream has terminated normally.
-Many operators manipulate the `Completed` event to shorten or extend the
-lifetime of an event stream.
-For example, [`take`][take] will complete after the specified number of values have
-been received, thereby terminating the stream early. On the other hand, most
+eived, thereby terminating the stream early. On the other hand, most
 operators that accept multiple signals or producers will wait until _all_ of
 them have completed before forwarding a `Completed` event, since a successful
 outcome will usually depend on all the inputs.
