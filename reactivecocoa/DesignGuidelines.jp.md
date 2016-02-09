@@ -148,28 +148,16 @@ RACが複数のイベントを同時に受け取ることを保証しないよ�
 
 #### Eventはデフォルトでは同期的に送信される
 
-RACは、暗黙的に同時実行または非同期実行を導入していません。
+RACは、暗黙的な同時実行または非同期実行を導入していません。
 スケジューラ演算子により、明示的に呼び出さなければいけません。
 
-通常Signal,Producerは、同期的にすべてのイベントを送信します。
+通常Signal, Producerは、同期的にすべてのイベントを送信します。
 デフォルトではObserverは同期的に、それぞれのイベントごとに（イベントが送信されるたびに）呼び出されます。
 イベントストリームはイベントが終わるまで再開しません。
 
 これは`UIControl`、` NSNotificationCenter`の処理に似ています。
 
-RAC does not implicitly introduce concurrency or asynchrony. [Operators][] that
-accept a [scheduler][Schedulers] may, but they must be explicitly invoked by the consumer of
-the framework.
 
-A “vanilla” signal or producer will send all of its events synchronously by
-default, meaning that the [observer][Observers] will be synchronously invoked for each event
-as it is sent, and that the underlying work will not resume until the event
-handler finishes.
-
-This is similar to how `NSNotificationCenter` or `UIControl` events are
-distributed.
-
-## The `Signal` contract
 ## `Signal`について
 
 シグナルは常にイベントに従います。
@@ -177,10 +165,6 @@ distributed.
 シグナルは参照型で、それぞれのシグナルはそれぞれ独自性がある、つまり、
 シグナル自体がそのライフタイムを有し、そして最終的に終了することができます。
 終了したら、Signalは再起動することはできません。
-
-
-A [signal][Signals] is an “always on” stream that obeys [the `Event`
-contract](#the-event-contract).
 
 `Signal` is a reference type, because each signal has identity—in other words, each
 signal has its own lifetime, and may eventually terminate. Once terminated,
