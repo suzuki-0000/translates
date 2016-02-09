@@ -12,7 +12,7 @@ Guidelines](http://blogs.msdn.com/b/rxteam/archive/2010/10/28/rx-design-guidelin
  1. Nextは値を提供したり、イベントの発生を示す
  1. Failuresは例外のように動作し、即座に送信する
  1. Completionは成功を示す
- 1. Interruptは、処理をキャンセルし、通常はすぐ送信する
+ 1. Interruptは、現在の処理をキャンセルし、通常はすぐ送信する
  1. EventはSerialである
  1. Eventは再帰的に送信することはできない]
  1. Eventはデフォルトでは同期的に送信される
@@ -34,12 +34,12 @@ Guidelines](http://blogs.msdn.com/b/rxteam/archive/2010/10/28/rx-design-guidelin
 
 **[ベストプラクティス](#ベストプラクティス)**
 
- 1. [Processは必要な数だけ]
- 1. [scheduler上でEventをObserveする]
- 1. [schedulerのスイッチは可能な限り少ない箇所で]
- 1. [SignalProducer内で副作用を処理する]
- 1. [SignalProduerの副作用は、一つのproduceされたSignalで行わせる]
- 1. [ライフサイクルの管理は、明示的なdisposal演算子を用いる]
+ 1. Processは必要な数だけ
+ 1. scheduler上でEventをObserveする
+ 1. schedulerのスイッチは可能な限り少ない箇所で
+ 1. SignalProducer内で副作用を処理する
+ 1. SignalProduerの副作用は、一つのproduceされたSignalで行わせる
+ 1. ライフサイクルの管理は、明示的なdisposal演算子を用いる
 
 **[新しい演算子を実装する](#新しい演算子を実装する)**
 
@@ -108,13 +108,11 @@ Next* (Interrupted | Failed | Completed)?
 例えば、`take`はいくつかのvalueを受け取ったあとにcompleteとします。
 言い方を変えると、signalかproducerが受け入れるほとんどの演算子は、`Completed`イベントを送信する前のイベントがすべて完了するまで待ちます。結果は通常、すべての入力に依存します。
 
-eived, thereby terminating the stream early. On the other hand, most
-operators that accept multiple signals or producers will wait until _all_ of
+Multiple signals or producers will wait until _all_ of
 them have completed before forwarding a `Completed` event, since a successful
 outcome will usually depend on all the inputs.
 
-#### Interruption cancels outstanding work and usually propagates immediately
-#### Interruptは、処理をキャンセルし、通常はすぐ送信する
+#### Interruptは、現在の処理をキャンセルし、通常はすぐ送信する
 
 `Interrupted`はイベントストリームがキャンセルされた時に送信されます。
 中断はsuccessかfailureが成功しなかったが、それは最後まで終わらなかったからで、failではない場合です。
