@@ -115,72 +115,37 @@ outcome will usually depend on all the inputs.
 #### Interruptは、現在の処理をキャンセルし、通常はすぐ送信する
 
 `Interrupted`はイベントストリームがキャンセルされた時に送信されます。
-中断はsuccessかfailureが成功しなかったが、それは最後まで終わらなかったからで、failではない場合です。
+Interruptはsuccessと、最後まで処理が終わらなかったfailureの間で発生します。
+
 ほとんどの演算子は中断をすぐに伝達しますが、しかし例外もあります。
-例えば、`flatten`は内部Producerで起こった何かしらのを、無視するので、内部処理は不必要に大きな単位の処理をキャンセルすべきではありません。
+例えば、`flatten`は内部Producerで起こった何かしらのを無視するので、内部処理は不必要に大きな単位の処理をキャンセルすべきではありません。
 
 RACは`disposal`時に自動的に`Interrupted`を送信しますが、もし必要であれば手動で送ることができます。
 加えて、カスタム演算子は必ず中断イベントを送信する必要があります。
 
-An `Interrupted` event is sent when an event stream should cancel processing.
 Interruption is somewhere between [success](#completion-indicates-success)
 and [failure](#failures-behave-like-exceptions-and-propagate-immediately)—the
 operation was not successful, because it did not get to finish, but it didn’t
 necessarily “fail” either.
 
-Most [operators][] will propagate interruption immediately, but there are some
-exceptions. For example, the [flattening operators][flatten] will ignore
-`Interrupted` events that occur on the _inner_ producers, since the cancellation
-of an inner operation should not necessarily cancel the larger unit of work.
-
-RAC will automatically send an `Interrupted` event upon [disposal][Disposables], but it can
-also be sent manually if necessary. Additionally, [custom
-operators](#implementing-new-operators) must make sure to forward interruption
-events to the observer.
-
-#### Events are serial
 #### EventはSerialである
 
 RACはイベントストリーム上のすべてのイベントがシリアルであることを保証します。
 言い換えると、signalまたはproducerのobserverは複数のイベントを同時に受け取ることは不可能です。
 それがもし複数のスレッドによって同時に送信されたとしてもです。
 
-
-RAC guarantees that all events upon a stream will arrive serially. In other
-words, it’s impossible for the observer of a signal or producer to receive
-multiple `Event`s concurrently, even if the events are sent on multiple threads
-simultaneously.
-
-This simplifies [operator][Operators] implementations and [observers][].
-
-#### Events cannot be sent recursively
 #### Eventは再帰的に送信することはできない
 
 RACが複数のイベントを同時に受け取ることを保証しないように、
-イベントは再帰的に受け取ることもできません。
+イベントは再帰的に受け取ることもできません。ゆえに、observerは再代入を必要としません。
 
 もしイベントがすでに処理中の以前のイベントからのイベントである場合、デッドロックが発生します。
-再帰的なシグナルは基本的にプログラミングミスとして捉えます。
+なので、再帰的なシグナルは基本的にプログラミングミスとして捉えます。
 デットロックの発生は、処理過程の出力結果がイベントなどの順序やタイミングと予期しない（危険な）依存関係にある場合に発生すべきです。
 
 再帰的な信号が望ましい場合、delay演算子などでタイムシフトされるべきで、
 それはイベントがすでに実行中でないことを保証する必要があります。
 
-Just like RAC guarantees that [events will not be received
-concurrently](#events-are-serial), it also guarantees that they won’t be
-received recursively. As a consequence, [operators][] and [observers][] _do not_ need to
-be reentrant.
-
-If an event is sent upon a signal from a thread that is _already processing_
-a previous event from that signal, deadlock will result. This is because
-recursive signals are usually programmer error, and the determinacy of
-a deadlock is preferable to nondeterministic race conditions.
-
-When a recursive signal is explicitly desired, the recursive event should be
-time-shifted, with an operator like [`delay`][delay], to ensure that it isn’t sent from
-an already-running event handler.
-
-#### Events are sent synchronously by default
 #### Eventはデフォルトでは同期的に送信される
 
 RACは、暗黙的に同時実行または非同期実行を導入していません。
