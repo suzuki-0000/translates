@@ -85,39 +85,22 @@ Next* (Interrupted | Failed | Completed)?
 
 ほとんどのイベント上のストリームは`Next`上で動作し、Signal/SignalProduerによって、意味のあるデータとして表現されます。
 
-#### Failures behave like exceptions and propagate immediately
 #### Failuresは例外のように動作し、即座に送信する
 
 `Failed`イベントはなにか悪いことが起こったということを示し、
 なにが起こったかというエラーを返します。
-これは致命的なので、可能な限り早く消費者に操作できるように伝達されます。
+これは致命的なので、可能な限り早く使用側に操作できるように伝達されます。
 
-`Failed` events indicate that something went wrong, and contain a concrete error
-that indicates what happened. Failures are fatal, and propagate as quickly as
-possible to the consumer for handling.
+この失敗は例外として振るまいを持ち、"skip"演算子でエラーを送信できます。
+逆にいうと、ほとんどの演算子はエラーが発生するとすぐに処理を中断しエラーを送信します。
+これは時間操作系の演算子にすら適用され、`delay`などの名前にかかわらず、すぐに伝達されます。
 
-この失敗は例外として振るまいを持ち、"skip"演算子でエラーを飛ばすこともできます。
-逆にいうと、ほとんどの演算子はエラーが発生するとすぐに処理を中断します。
-これはtime-shifted演算子にすら適用され、`delay`などの名前にかかわらずすぐに伝達されます。
-
-Failures also behave like exceptions, in that they “skip” operators, terminating
-them along the way. In other words, most [operators][] immediately stop doing
-work when a failure is received, and then propagate the failure onward. This even applies to time-shifted operators, like [`delay`][delay]—which, despite its name, will forward any failures immediately.
-
-結果的に、失敗は「普通でない」中断として扱われるべきです。
+結論で言うと、失敗は「普通でない」中断として扱われるべきです。
 もし演算子に重要な処理を終わらせたければ、`Next`で行われるのが適切です。
-
-Consequently, failures should only be used to represent “abnormal” termination. If it is important to let operators (or consumers) finish their work, a `Next`
-event describing the result might be more appropriate.
 
 もしイベントストリームが失敗させない場合、`NoError`としてパラメータ化してください。
 これをすることで`Failed`イベントはイベントストリーム上で実行されません。
 
-If an event stream can _never_ fail, it should be parameterized with the
-special [`NoError`][NoError] type, which statically guarantees that a `Failed`
-event cannot be sent upon the stream.
-
-#### Completion indicates success
 #### Completionは成功を示す
 
 操作が成功した場合か、正常に中断された場合、イベントストリームは`Completed`を送信します。
