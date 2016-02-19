@@ -166,28 +166,14 @@ RACは、暗黙的な同時実行または非同期実行を導入していま�
 シグナル自体がそのライフタイムを有し、そして最終的に終了することができます。
 終了したら、Signalは再起動することはできません。
 
-`Signal` is a reference type, because each signal has identity—in other words, each
-signal has its own lifetime, and may eventually terminate. Once terminated,
-a signal cannot be restarted.
-
-#### Signals start work when instantiated
 #### Signalは、startされて初めてインスタンスを生成
 
 シグナルの初期化により、すぐに生成されたクロージャーを実行します。
 これは初期化時点で何からの副作用が起こる可能性があることを意味します。
 
 また、初期化するより前にイベントを送信することもできます。
-しかし、Observerがこの時点でアタッチできなくなってからは、送信されるイベントを受信することはできません。
+しかしながら、Observerがこの時点で結合されることは不可能であるため、送信されるイベントを受信することはできません。
 
-
-[`Signal.init`][Signal.init] immediately executes the generator closure that is passed to it.
-This means that side effects may occur even before the initializer returns.
-
-It is also possible to send [events][] before the initializer returns. However,
-since it is impossible for any [observers][] to be attached at this point, any
-events sent this way cannot be received.
-
-#### Observing a signal does not have side effects
 #### SignalはObservingすることでの副作用はない
 
 処理を紐付けられたシグナルは、Observerが追加されても削除されても、開始、または停止することはありません。
@@ -195,14 +181,6 @@ events sent this way cannot be received.
 
 シグナルの副作用の停止は、シグナルの中断を通してのみ可能です。
 
-The work associated with a `Signal` does not start or stop when [observers][] are
-added or removed, so the [`observe`][observe] method (or the cancellation thereof) never
-has side effects.
-
-A signal’s side effects can only be stopped through [a terminating
-event](#signals-are-retained-until-a-terminating-event-occurs).
-
-#### All observers of a signal see the same events in the same order
 #### SignalのすべてのObserverは同じイベントを同じ順序でこなす
 
 Observerは副作用を持ち得ないので、Signalはイベントをカスタマイズすることはできません。
@@ -215,9 +193,7 @@ Observerは副作用を持ち得ないので、Signalはイベントをカスタ
 Observerに、すでに中断されたシグナルを追加する場合、必ず１つの`Interrupted`イベントが
 指定のObserverに送られます。
 
-Because [observation does not have side
-effects](#observing-a-signal-does-not-have-side-effects), a `Signal` never
-customizes events for different [observers][]. When an event is sent upon a signal,
+When an event is sent upon a signal,
 it will be [synchronously](#events-are-sent-synchronously-by-default)
 distributed to all observers that are attached at that time, much like
 how `NSNotificationCenter` sends notifications.
