@@ -190,23 +190,9 @@ Observerは副作用を持ち得ないので、Signalはイベントをカスタ
 すべてのObserverは効率的に同じイベントストリームを参照します。
 
 このルールの例外が１つあります。
-Observerに、すでに中断されたシグナルを追加する場合、必ず１つの`Interrupted`イベントが
+すでに中断されたシグナルにObserverを追加する場合、必ず１つの`Interrupted`イベントが
 指定のObserverに送られます。
 
-When an event is sent upon a signal,
-it will be [synchronously](#events-are-sent-synchronously-by-default)
-distributed to all observers that are attached at that time, much like
-how `NSNotificationCenter` sends notifications.
-
-In other words, there are not different event “timelines” per observer. All
-observers effectively see the same stream of events.
-
-There is one exception to this rule: adding an observer to a signal _after_ it
-has already terminated will result in exactly one
-[`Interrupted`](#interruption-cancels-outstanding-work-and-usually-propagates-immediately)
-event sent to that specific observer.
-
-#### A signal is retained until the underlying observer is released
 #### SignalはObserverがリリースされるまで保持される
 
 もし呼び出し側がSignalへの参照を保持していない場合でも
@@ -219,15 +205,6 @@ event sent to that specific observer.
 注意してほしいのは、SignalはTerminatingイベントが送信される前に解放可能であるということです。
 これは通常メモリーリークを引き起こすため避けられるべきですが、時には中断を無効化する有効な手段にもなります。
 
-Even if the caller does not maintain a reference to the `Signal`:
-
- - A signal created with [`Signal.init`][Signal.init] is kept alive until the generator closure
-   releases the [observer][Observers] argument.
- - A signal created with [`Signal.pipe`][Signal.pipe] is kept alive until the returned observer
-   is released.
-
-This ensures that signals associated with long-running work do not deallocate
-prematurely.
 
 Note that it is possible to release a signal before a terminating [event][Events] has been
 sent upon it. This should usually be avoided, as it can result in resource
