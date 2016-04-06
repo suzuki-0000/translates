@@ -205,46 +205,23 @@ Observerは副作用を持ち得ないので、Signalはイベントをカスタ
 注意してほしいのは、SignalはTerminatingイベントが送信される前に解放可能であるということです。
 これは通常メモリーリークを引き起こすため避けられるべきですが、時には中断を無効化する有効な手段にもなります。
 
-
-Note that it is possible to release a signal before a terminating [event][Events] has been
-sent upon it. This should usually be avoided, as it can result in resource
-leaks, but is sometimes useful to disable termination.
-
-#### Terminating events dispose of signal resources
 #### Eventを切断することでSignalのリソースを廃棄する
 
-TerminatingイベントがSignalを通して送られた時、すべてのObserverはリリースされ、
-処分されるべきイベント郡を処理するために生成されています。
+TerminatingイベントがSignalを通して送られた時、すべてのObserver、及び
+生成されたイベントのすべてを処分します。
 
-適切なクリーンアップを確実にする最も簡単な方法は、Terminationが発生した時に処理されるDisposableを生成されたClosureから取得することです。
+適切なクリーンアップを確実にする最も簡単な方法は、
+切断が発生した時に処理されるDisposableを生成したClosureから取得することです。
 Disposableはメモリのリリース、I/Oのハンドリング、ネットワーク通信キャンセルのハンドリング、その他、なにかしらの実行されている処理への責任を持っています。
 
-When a terminating [event][Events] is sent along a `Signal`, all [observers][] will be
-released, and any resources being used to generate events should be disposed of.
-
-The easiest way to ensure proper resource cleanup is to return a [disposable][Disposables]
-from the generator closure, which will be disposed of when termination occurs.
-The disposable should be responsible for releasing memory, closing file handles,
-canceling network requests, or anything else that may have been associated with
-the work being performed.
-
-## The `SignalProducer` contract
 ## SignalProducerについて
 
 SignalProducerはいわばSignalを生成する「レシピ」のようなものです。
-SignalProducerは彼らそのものは何もせず、SignalがProduceされたタイミングでのみ作用します。
+SignalProducerそのものは何もしません。
 
-なので、SignalProducerはどのようにSignalを生成するかを宣言するだけです。
+SignalProducerはどのようにSignalを生成するかを宣言するだけです。
 それはValueTypeであり、メモリー管理の機能を持ちません。
 
-A [signal producer][Signal Producers] is like a “recipe” for creating
-[signals][]. Signal producers do not do anything by themselves—[work begins only
-when a signal is produced](#signal-producers-start-work-on-demand-by-creating-signals).
-
-Since a signal producer is just a declaration of _how_ to create signals, it is
-a value type, and has no memory management to speak of.
-
-#### Signal producers start work on demand by creating signals
 #### SignalProducerはSignalの作成によってstartする
 
 `start`, `startWithSignal`メソッドでSignalをProduceします（明示的に、そして暗黙的に、それぞれ）
@@ -252,27 +229,12 @@ Signalが生成された後、SignalProducerのinitによって渡されたclosu
 それはeventsの流れであり、いずれかのObserverにアタッチされた後です。
 
 Producer自体は、処理のための責任を担いませんが、
-"starting"と"canceling"はProducerとの対話で一般的です。
+"starting"と"canceling"はProducerを語る上で共通しています。
 これらの要素はSignalを実際に動作させるために使用し、またSignalを破棄するために使用します。
 
 Producerはゼロを含む任意の数をスタートすることができます
 また、それに関連する処理は正確に同じ数だけ実行されます。
 
-The [`start`][start] and [`startWithSignal`][startWithSignal] methods each
-produce a `Signal` (implicitly and explicitly, respectively). After
-instantiating the signal, the closure that was passed to
-[`SignalProducer.init`][SignalProducer.init] will be executed, to start the flow
-of [events][] after any observers have been attached.
-
-Although the producer itself is not really responsible for the execution of
-work, it’s common to speak of “starting” and “canceling” a producer. These terms
-refer to producing a `Signal` that will start work, and disposing of that
-signal to stop work.
-
-A producer can be started any number of times (including zero), and the work
-associated with it will execute exactly that many times as well.
-
-#### Each produced signal may send different events at different times
 #### produceされたSignalはそれぞれ異なるタイミングで異なるeventを送信しうる
 
 SignalProducerは生成されたSignalによってオンデマンドで処理されるため、
