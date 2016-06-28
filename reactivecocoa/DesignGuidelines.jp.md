@@ -285,19 +285,14 @@ Signalの破棄によって、同じSignalProducerで生成された他のSignal
 
 #### Scheduler上でEventをObserveする
 
-When receiving a [signal][Signals] or [producer][Signal Producers] from unknown
-code, it can be difficult to know which thread [events][] will arrive upon. Although
-events are [guaranteed to be serial](#events-are-serial), sometimes stronger
-guarantees are needed, like when performing UI updates (which must occur on the
-main thread).
+もしSignalかSignalProducerを知らないコードから受け取る場合、どのイベントスレッドに到着するか知るのは難しいです。
+たとえイベントがシリアルであることを保証していたとしても、
+時としてUIのupdateのような、必ずメインスレッドで実施する、強いイベントが存在するでしょう。
 
-Whenever such a guarantee is important, the [`observeOn`][observeOn]
-[operator][Operators] should be used to force events to be received upon
-a specific [scheduler][Schedulers].
+ObserveOn演算子は、指定したSchedulerでイベントを受け取ることを保証します。
 
-#### Switch schedulers in as few places as possible
- 1. [schedulerのスイッチは可能な限り少ない箇所で]
 
+#### schedulerのスイッチは可能な限り少ない箇所で
 
 Notwithstanding the [above](#observe-events-on-a-known-scheduler), [events][]
 should only be delivered to a specific [scheduler][Schedulers] when absolutely
