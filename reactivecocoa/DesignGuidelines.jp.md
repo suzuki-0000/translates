@@ -285,24 +285,19 @@ Signalの破棄によって、同じSignalProducerで生成された他のSignal
 
 #### Scheduler上でEventをObserveする
 
-もしSignalかSignalProducerを知らないコードから受け取る場合、どのイベントスレッドに到着するか知るのは難しいです。
+もしSignalかSignalProducerを知らないコードから受け取る場合、どのタイミングで到着するか知るのは難しいです。
 たとえイベントがシリアルであることを保証していたとしても、
 時としてUIのupdateのような、必ずメインスレッドで実施する、強いイベントが存在するでしょう。
 
 ObserveOn演算子は、指定したSchedulerでイベントを受け取ることを保証します。
 
-
 #### schedulerのスイッチは可能な限り少ない箇所で
 
-Notwithstanding the [above](#observe-events-on-a-known-scheduler), [events][]
-should only be delivered to a specific [scheduler][Schedulers] when absolutely
-necessary. Switching schedulers can introduce unnecessary delays and cause an
-increase in CPU load.
+上で、Scheduler上でObserveするといいましたが、必要最小限でやるべきです。
+Schdulerを変更することは、不必要な遅延やCPUの上昇を招きます。
 
-Generally, [`observeOn`][observeOn] should only be used right before observing
-the [signal][Signals], starting the [producer][Signal Producers], or binding to
-a [property][Properties]. This ensures that events arrive on the expected
-scheduler, without introducing multiple thread hops before their arrival.
+一般的に、`observeOn`はsignalをobserveする前、signalProducerをstartする前、propertiesをbindするときのみです。
+これはイベントが期待したschedulerでくることを保証し、ムダなスレッドの行き来をしなくなります。
 
 #### Capture side effects within signal producers
  1. [SignalProducer内で副作用を処理する]
