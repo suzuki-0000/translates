@@ -246,7 +246,6 @@ SignalProducerは生成されたSignalによって必要に応じて処理され
 
 にもかかわらず、それぞれのSignalProducerはEventsの条件に従います。
 
-#### Signal operators can be lifted to apply to signal producers
 #### SignalはlistによりSignalProducerに適用しうる
 
 SignalとSignalProducerの関係により、いかなる演算子（１つでも複数でも）も、
@@ -266,36 +265,14 @@ DisposableオブジェクトはSignalを中断するために生成され、
 Signalの破棄によって、同じSignalProducerで生成された他のSignalに影響を与えないことに
 注意してください。
 
-When a producer is started using the [`start`][start] or
-[`startWithSignal`][startWithSignal] methods, a [`Disposable`][Disposables] is
-automatically created and passed back.
-
-Disposing of this object will
-[interrupt](#interruption-cancels-outstanding-work-and-usually-propagates-immediately)
-the produced `Signal`, thereby canceling outstanding work and sending an
-`Interrupted` [event][Events] to all [observers][], and will also dispose of
-everything added to the [`CompositeDisposable`][CompositeDisposable] in
-[SignalProducer.init].
-
-Note that disposing of one produced `Signal` will not affect other signals created
-by the same `SignalProducer`.
-
-## Best practices
 ## ベスト・プラクティス
 
-これから記述するプラクティスは、RACのコードを宣言的に、理解しやすく、同時にパフォーマンスに優れた状態を保つために記載されています。
+これから記述するプラクティスは、RACのコードを宣言的に、
+理解しやすく、同時にパフォーマンスに優れた状態を保つために記載されています。
 
 しかし、これは１つのガイドラインでしかありません。
 それぞれのどのような箇所に、どのようなコードを適用するかは、適切な判断をしてください。
 
-
-The following recommendations are intended to help keep RAC-based code
-predictable, understandable, and performant.
-
-They are, however, only guidelines. Use best judgement when determining whether
-to apply the recommendations here to a given piece of code.
-
-#### Process only as many values as needed
 #### Processは必要な数だけ
 
 使われない処理に対して、
@@ -306,22 +283,7 @@ to apply the recommendations here to a given piece of code.
 
 これを実行することで潜在的にかなりの演算処理を省くことができます。
 
-Keeping an event stream alive longer than necessary can waste CPU and memory, as
-unnecessary work is performed for results that will never be used.
-
-If only a certain number of values or certain number of time is required from
-a [signal][Signals] or [producer][Signal Producers], operators like
-[`take`][take] or [`takeUntil`][takeUntil] can be used to
-automatically complete the stream once a certain condition is fulfilled.
-
-
-The benefit is exponential, too, as this will terminate dependent operators
-sooner, potentially saving a significant amount of work.
-
-#### Observe events on a known scheduler
-#### scheduler上でEventをObserveする
-
-
+#### Scheduler上でEventをObserveする
 
 When receiving a [signal][Signals] or [producer][Signal Producers] from unknown
 code, it can be difficult to know which thread [events][] will arrive upon. Although
