@@ -237,44 +237,23 @@ Producerはゼロを含む任意の数をスタートすることができます
 
 #### produceされたSignalはそれぞれ異なるタイミングで異なるeventを送信しうる
 
-SignalProducerは生成されたSignalによってオンデマンドで処理されるため、
+SignalProducerは生成されたSignalによって必要に応じて処理されるため、
 紐付けられたObserverによって実行する処理は異なるで可能性があり、
 それらのObserverはそれぞれ完全に違ったEventsのタイムラインを見ることになります。
 
 言いかえると、EventsはProducerがスタートするたびに再び生成され、
-それは他の時系列からProducerがスタートすることで完全に異なるものでありうるということです
+それは他の時系列のProducerから見て、完全に別物であるということです。
 
 にもかかわらず、それぞれのSignalProducerはEventsの条件に従います。
 
-Because signal producers [start work on
-demand](#signal-producers-start-work-on-demand-by-creating-signals), there may
-be different [observers][] associated with each execution, and those observers
-may see completely different [event][Events] timelines.
-
-In other words, events are generated from scratch for each time the producer is
-started, and can be completely different (or in a completely different order)
-from other times the producer is started.
-
-Nonetheless, each execution of a signal producer will follow [the `Event`
-contract](#the-event-contract).
-
 #### Signal operators can be lifted to apply to signal producers
-#### Signal演算子によりSignalProducerを操作しうる
+#### SignalはlistによりSignalProducerに適用しうる
 
 SignalとSignalProducerの関係により、いかなる演算子（１つでも複数でも）も、
-liftメソッドを用いることで自動的にSignalからSignalProducerへと変換することができます。
+liftメソッドを用いることでSignalからSignalProducerへと変換することができます。
 
-`lift`は適用されます、振るまいを　指定された演算子それぞれのSignalへと　それはSignalProducerがスタートした時に
+`lift`はそれぞれのSignalnに対し、SignalProducerがスタートした時と同様の動きを適用させます。
 
-
-Due to the relationship between signals and signal producers, it is possible to
-automatically promote any [operators][] over one or more `Signal`s to apply to
-the same number of `SignalProducer`s instead, using the [`lift`][lift] method.
-
-`lift` will apply the behavior of the specified operator to each `Signal` that
-is [created when the signal produced is started](#signal-producers-start-work-on-demand-by-creating-signals).
-
-#### Disposing of a produced signal will interrupt it
 #### 破棄されたSignalは中断される
 
 SignalProducerが`start`,`startWithSignal`でスタートした時、`Disposable`が自動的に生成され、
