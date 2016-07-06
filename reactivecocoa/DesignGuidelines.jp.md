@@ -293,14 +293,16 @@ ObserveOn演算子は、指定したSchedulerでイベントを受け取るこ�
 
 #### schedulerのスイッチは可能な限り少ない箇所で
 
-上で、Scheduler上でObserveするといいましたが、必要最小限でやるべきです。
+Scheduler上でObserveするといいましたが、必要最小限でやるべきです。
 Schdulerを変更することは、不必要な遅延やCPUの上昇を招きます。
 
 一般的に、`observeOn`はsignalをobserveする前、signalProducerをstartする前、propertiesをbindするときのみです。
 これはイベントが期待したschedulerでくることを保証し、ムダなスレッドの行き来をしなくなります。
 
 #### Capture side effects within signal producers
- 1. [SignalProducer内で副作用を処理する]
+### SignalProducer内で副作用を処理する
+
+SignalProducerはオンデマンドで処理されるため、SignalProduerに返却するなにかしらの処理は、SignalProducerの中で処理されるべきです。
 
 Because [signal producers start work on
 demand](#signal-producers-start-work-on-demand-by-creating-signals), any
@@ -308,17 +310,15 @@ functions or methods that return a [signal producer][Signal Producers] should
 make sure that side effects are captured _within_ the producer itself, instead
 of being part of the function or method call.
 
-For example, a function like this:
+例えばこんな感じ
 
 ```swift
 func search(text: String) -> SignalProducer<Result, NetworkError>
 ```
 
-… should _not_ immediately start a search.
-
-Instead, the returned producer should execute the search once for every time
-that it is started. This also means that if the producer is never started,
-a search will never have to be performed either.
+このFunctionはすぐにはスタートしません。
+その代わり、この関数されたProducerは、それ自体がスタートしたタイミングでスタートするべきです。
+これはつまりProducerはもし一度もスタートしなければ、サーチは一度もされないということを意味しています。
 
 #### Share the side effects of a signal producer by sharing one produced signal
  1. [SignalProduerの副作用は、一つのproduceされたSignalで行わせる]
