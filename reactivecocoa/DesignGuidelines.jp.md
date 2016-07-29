@@ -106,11 +106,9 @@ Next* (Interrupted | Failed | Completed)?
 操作が成功した場合、もしくは正常に中断された場合、イベントストリームは`Completed`を送信します。
 多くの演算子が`Completed`を操作し、そのイベントストリーム上の寿命を短縮したり延長したりします。
 例えば、`take`はいくつかのvalueを受け取ったあとにcompleteとします。
-言い方を変えると、signalかproducerが受け入れるほとんどの演算子は、`Completed`イベントを送信する前のイベントがすべて完了するまで待ちます。結果は通常、すべての入力に依存します。
-
-Multiple signals or producers will wait until _all_ of
-them have completed before forwarding a `Completed` event, since a successful
-outcome will usually depend on all the inputs.
+言い方を変えると、signalかproducerが受け入れるほとんどの演算子は、
+`Completed`イベントを送信する前のイベントがすべて完了するまで待ちます。
+結果は通常、すべての入力に依存します。
 
 #### Interruptは、現在の処理をキャンセルし、通常はすぐ送信する
 
@@ -140,11 +138,11 @@ RACが複数のイベントを同時に受け取ることを保証しないよ�
 イベントは再帰的に受け取ることもできません。ゆえに、observerは再代入を必要としません。
 
 もしイベントがすでに処理中の以前のイベントからのイベントである場合、デッドロックが発生します。
-なので、再帰的なシグナルは基本的にプログラミングミスとして捉えます。
+なので、RACでは再帰的なシグナルは基本的にプログラミングミスとして捉えます。
 デットロックの発生は、処理過程の出力結果がイベントなどの順序やタイミングと予期しない（危険な）依存関係にある場合に発生すべきです。
 
 再帰的な信号が望ましい場合、delay演算子などでタイムシフトされるべきで、
-それはイベントがすでに実行中でないことを保証する必要があります。
+その場合イベントがすでに実行中でないことを保証する必要があります。
 
 #### Eventはデフォルトでは同期的に送信される
 
@@ -212,7 +210,8 @@ TerminatingイベントがSignalを通して送られた時、すべてのObserv
 
 適切なクリーンアップを確実にする最も簡単な方法は、
 切断が発生した時に処理されるDisposableを生成したClosureから取得することです。
-Disposableはメモリのリリース、I/Oのハンドリング、ネットワーク通信キャンセルのハンドリング、その他、なにかしらの実行されている処理への責任を持っています。
+Disposableはメモリのリリース、I/Oのハンドリング、ネットワーク通信キャンセルのハンドリング、
+その他、なにかしらの実行されている処理への責任を持っています。
 
 ## SignalProducerについて
 
@@ -224,15 +223,15 @@ SignalProducerはどのようにSignalを生成するかを宣言するだけで
 
 #### SignalProducerはSignalの作成によってstartする
 
-`start`, `startWithSignal`メソッドでSignalをProduceします（明示的に、そして暗黙的に、それぞれ）
-Signalが生成された後、SignalProducerのinitによって渡されたclosureが実行されます。
-それはeventsの流れであり、いずれかのObserverにアタッチされた後です。
+`start`, `startWithSignal`メソッドがそれぞれSignalを生成します（明示的に、そして暗黙的に）
+Signalが生成された後、SignalProducerのinitによって渡されたclosureが実行され、
+EventのフローがそれぞれのObserverへとアタッチされます。
 
 Producer自体は、処理のための責任を担いませんが、
 "starting"と"canceling"はProducerを語る上で共通しています。
 これらの要素はSignalを実際に動作させるために使用し、またSignalを破棄するために使用します。
 
-Producerはゼロを含む任意の数をスタートすることができます
+Producerはゼロを含む任意の数をスタートすることができます。
 また、それに関連する処理は正確に同じ数だけ実行されます。
 
 #### produceされたSignalはそれぞれ異なるタイミングで異なるeventを送信しうる
@@ -299,29 +298,21 @@ Schdulerを変更することは、不必要な遅延やCPUの上昇を招きま
 一般的に、`observeOn`はsignalをobserveする前、signalProducerをstartする前、propertiesをbindするときのみです。
 これはイベントが期待したschedulerでくることを保証し、ムダなスレッドの行き来をしなくなります。
 
-#### Capture side effects within signal producers
 ### SignalProducer内で副作用を処理する
+SignalProducerはオンデマンドで処理されるため、SignalProduerに返却するなにかしらの処理は、
+なにかしらのFunctionを呼ぶのではなく、SignalProducerの中で処理されるべきです。
 
-SignalProducerはオンデマンドで処理されるため、SignalProduerに返却するなにかしらの処理は、SignalProducerの中で処理されるべきです。
-
-Because [signal producers start work on
-demand](#signal-producers-start-work-on-demand-by-creating-signals), any
-functions or methods that return a [signal producer][Signal Producers] should
-make sure that side effects are captured _within_ the producer itself, instead
-of being part of the function or method call.
-
-例えばこんな感じ
+例えば
 
 ```swift
 func search(text: String) -> SignalProducer<Result, NetworkError>
 ```
 
-このFunctionはすぐにはスタートしません。
-その代わり、この関数されたProducerは、それ自体がスタートしたタイミングでスタートするべきです。
-これはつまりProducerはもし一度もスタートしなければ、サーチは一度もされないということを意味しています。
+このFunctionはすぐに検索するわけではありません。
+その代わり、この返却されたProducerは、スタートされた場合、都度その応えを返却すべきです。
+これは、つまりProducerはもし一度もスタートしていない場合、サーチは一度もされないということを意味します。
 
-#### Share the side effects of a signal producer by sharing one produced signal
- 1. [SignalProduerの副作用は、一つのproduceされたSignalで行わせる]
+#### SignalProduerの副作用は、一つのproduceされたSignalで行わせる
 
 
 If multiple [observers][] are interested in the results of a [signal
