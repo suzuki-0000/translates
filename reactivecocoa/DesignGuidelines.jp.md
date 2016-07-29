@@ -340,7 +340,8 @@ Disposableは`start`から返却され、それはSignalProducerの処理をキ�
  
  
  #### Implementing new operators
-
+#### 新しい演算子の作成
+RACはたくさんの演算子を
 RAC provides a long list of built-in [operators][] that should cover most use
 cases; however, RAC is not a closed system. It's entirely valid to implement
 additional operators for specialized uses, or for consideration in ReactiveCocoa
