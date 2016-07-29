@@ -314,45 +314,32 @@ func search(text: String) -> SignalProducer<Result, NetworkError>
 
 #### SignalProduerの副作用は、一つのproduceされたSignalで行わせる
 
+もし複数のObserverがSignal,SignalProducerの結果を参照する、
+`start`メソッドを呼ぶことで、紐付けられている複数のObserverが、そのProducerを複数呼ぶことを意味し、
+それが毎回同じ結果になるとは限りません。
 
-If multiple [observers][] are interested in the results of a [signal
-producer][Signal Producers], calling [`start`][start] once for each observer
-means that the work associated with the producer will [execute that many
-times](#signal-producers-start-work-on-demand-by-creating-signals) and [may not
-generate the same results](#each-produced-signal-may-send-different-events-at-different-times).
+もし：
 
-If:
+・Observerはまったく同じ結果を受信する必要がある
+・Observerはお互いを知っている、または
+・スタートするProducerはそれぞれのObserverを知っている
 
- 1. the observers need to receive the exact same results
- 1. the observers know about each other, or
- 1. the code starting the producer knows about each observer
+場合は、`startWithSignal`を用いて、
+Producerを一度だけスタートさせ、
+1つのSignalですべてのObserverにシェアさせることが適切です。
 
-… it may be more appropriate to start the producer _just once_, and share the
-results of that one [signal][Signals] to all observers, by attaching them within
-the closure passed to the [`startWithSignal`][startWithSignal] method.
+#### ライフサイクルの管理は、明示的なdisposal演算子を用いる
 
-#### Prefer managing lifetime with operators over explicit disposal
- 1. [ライフサイクルの管理は、明示的なdisposal演算子を用いる]
+Disposableは`start`から返却され、それはSignalProducerの処理をキャンセルすることを簡単にし、
+特に明示的にdisposableを使うことで、複雑なリソース管理から抜けだせ、コードを綺麗にします。
+また、下記はそれよりも高いレベルのOperator群で、手動のDisposalを使うことより優先されます。
 
-
-Although the [disposable][Disposables] returned from [`start`][start] makes
-canceling a [signal producer][Signal Producers] really easy, explicit use of
-disposables can quickly lead to a rat's nest of resource management and cleanup
-code.
-
-There are almost always higher-level [operators][] that can be used instead of manual
-disposal:
-
- * [`take`][take] can be used to automatically terminate a stream once a certain
-   number of values have been received.
- * [`takeUntil`][takeUntil] can be used to automatically terminate
-   a [signal][Signals] or producer when an event occurs (for example, when
-   a “Cancel” button is pressed in the UI).
- * [Properties][] and the `<~` operator can be used to “bind” the result of
-   a signal or producer, until termination or until the property is deallocated.
-   This can replace a manual observation that sets a value somewhere.
-
-## Implementing new operators
+ * `take`は指定された数が終われば自動的にterminateします。
+ * `takeUntil`はその指定したEventが発生した場合自動的にTerminateします。（例：UIからキャンセルボタンがタップ）  the UI).
+ * `Properties`と `<~`演算子は対象のPropertyがdeallocatedされるか、Terminateするまでのバインドとして有用です。
+ 
+ 
+ #### Implementing new operators
 
 RAC provides a long list of built-in [operators][] that should cover most use
 cases; however, RAC is not a closed system. It's entirely valid to implement
